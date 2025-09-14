@@ -1,5 +1,4 @@
 <?php
-session_start();
 $pageTitle = 'Manage Quotations';
 require_once '../provider/provider_header.php';
 require_once '../config/Database.php';

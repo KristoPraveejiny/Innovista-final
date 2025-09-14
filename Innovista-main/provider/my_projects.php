@@ -1,6 +1,8 @@
 <?php 
 $pageTitle = 'My Projects';
-require_once '../provider/provider_header.php'; 
+require_once '../provider/provider_header.php';
+require_once '../config/session.php';
+protectPage('provider'); 
 
 // --- DUMMY DATA ---
 $active_projects = [

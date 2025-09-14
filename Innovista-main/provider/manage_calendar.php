@@ -1,6 +1,8 @@
 <?php 
 $pageTitle = 'Manage Calendar';
 require_once 'provider_header.php'; 
+require_once '../config/session.php';
+protectPage('provider');
 ?>
 
 <div class="booking-layout">

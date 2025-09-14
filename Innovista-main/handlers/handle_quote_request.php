@@ -5,14 +5,27 @@ require_once '../public/session.php';
 require_once '../handlers/flash_message.php';
 require_once '../config/Database.php';
 
+// Check if this is an AJAX request
+$isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
+
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
+    }
     header('Location: ../public/index.php');
     exit();
 }
 
 // Ensure user is logged in as a customer
 if (!isUserLoggedIn() || getUserRole() !== 'customer') {
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Please log in as a customer to request a quote.']);
+        exit();
+    }
     set_flash_message('error', 'Please log in as a customer to request a quote.');
     header('Location: ../public/login.php');
     exit();
@@ -26,6 +39,11 @@ $provider_id = filter_input(INPUT_POST, 'provider_id', FILTER_VALIDATE_INT);
 
 // Input validation
 if (empty($service_type) || empty($project_description)) {
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Service type and project description are required.']);
+        exit();
+    }
     set_flash_message('error', 'Service type and project description are required.');
     header('Location: ../customer/request_quotation.php' . ($provider_id ? '?provider_id=' . $provider_id : ''));
     exit();
@@ -110,6 +128,25 @@ try {
     $stmt_insert_quote->execute();
 
     $conn->commit();
+    
+    // Send notification to provider if one was assigned
+    if ($provider_id) {
+        require_once '../notifications/NotificationManager.php';
+        $notificationManager = new NotificationManager($conn);
+        
+        $notificationManager->notifyNewQuotationRequest($provider_id, [
+            'id' => $conn->lastInsertId(),
+            'service_type' => $service_type
+        ]);
+    }
+    
+    // Return success response
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => 'Quotation request submitted successfully!']);
+        exit();
+    }
+    
     // Redirect to my projects page regardless of provider assignment
     header('Location: ../customer/my_projects.php'); 
     exit();
@@ -117,12 +154,22 @@ try {
 } catch (PDOException $e) {
     $conn->rollBack();
     error_log("Quote Request Error: " . $e->getMessage());
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'A database error occurred while submitting your request. Please try again.']);
+        exit();
+    }
     set_flash_message('error', 'A database error occurred while submitting your request. Please try again.');
     header('Location: ../customer/request_quotation.php' . ($provider_id ? '?provider_id=' . $provider_id : ''));
     exit();
 } catch (Exception $e) {
     $conn->rollBack();
     error_log("Quote Request General Error: " . $e->getMessage());
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'An unexpected error occurred. Please try again.']);
+        exit();
+    }
     set_flash_message('error', 'An unexpected error occurred. Please try again.');
     header('Location: ../customer/request_quotation.php' . ($provider_id ? '?provider_id=' . $provider_id : ''));
     exit();

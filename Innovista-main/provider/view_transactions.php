@@ -1,6 +1,8 @@
 <?php 
 $pageTitle = 'My Earnings & Transactions';
-require_once 'provider_header.php'; 
+require_once 'provider_header.php';
+require_once '../config/session.php';
+protectPage('provider'); 
 
 // --- In a real application, this data would come from your database ---
 $stats = [

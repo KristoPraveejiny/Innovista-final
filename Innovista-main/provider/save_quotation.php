@@ -44,6 +44,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bindParam(':id', $quotation_id);
     $stmt->execute();
 
+    // Send notification to customer about new quotation
+    try {
+        require_once '../notifications/NotificationManager.php';
+        $notificationManager = new NotificationManager($db);
+        
+        // Get quotation details for notification
+        $stmt = $db->prepare('SELECT service_type, project_description FROM quotations WHERE id = ?');
+        $stmt->execute([$quotation_id]);
+        $quotationDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $notificationManager->notifyNewQuotationReceived($customer_id, [
+            'id' => $quotation_id,
+            'amount' => $amount,
+            'service_type' => $quotationDetails['service_type'] ?? 'Service',
+            'provider_name' => $_SESSION['user_name'] ?? 'Provider'
+        ]);
+    } catch (Exception $e) {
+        // Log error but don't stop the process
+        error_log("Failed to send notification to customer: " . $e->getMessage());
+    }
+
     // Redirect to customer dashboard with a success message
     header('Location: ../customer/customer_dashboard.php?quote_sent=1&id=' . $quotation_id);
     exit();

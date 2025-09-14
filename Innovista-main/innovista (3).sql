@@ -24,6 +24,33 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `notifications`
+--
+
+CREATE TABLE `notifications` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `type` enum('quotation','payment','project','dispute','system','general') DEFAULT 'general',
+  `priority` enum('low','medium','high','urgent') DEFAULT 'medium',
+  `is_read` tinyint(1) DEFAULT 0,
+  `action_url` varchar(500) DEFAULT NULL,
+  `related_id` int(11) DEFAULT NULL COMMENT 'ID of related entity (quotation, project, etc.)',
+  `related_type` varchar(50) DEFAULT NULL COMMENT 'Type of related entity',
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `read_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `type` (`type`),
+  KEY `is_read` (`is_read`),
+  KEY `created_at` (`created_at`),
+  CONSTRAINT `fk_notifications_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `contacts`
 --
 
@@ -477,6 +504,12 @@ ALTER TABLE `users`
 --
 ALTER TABLE `contacts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `notifications`
+--
+ALTER TABLE `notifications`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `custom_quotations`
