@@ -64,65 +64,80 @@ try {
     // Begin transaction
     $db->beginTransaction();
 
-    // Insert quotation
-    $stmt = $db->prepare("INSERT INTO quotations 
-        (customer_id, provider_id, service_type, project_description, status, created_at) 
-        VALUES (:customer_id, :provider_id, :service_type, :project_description, :status, NOW())");
-
-    $stmt->execute([
-        ':customer_id' => $customer_id,
-        ':provider_id' => $provider_id,
-        ':service_type' => $service_type,
-        ':project_description' => $project_description,
-        ':status' => 'Awaiting Quote'
-    ]);
-
-    $quotationId = $db->lastInsertId();
-
-    // Handle file uploads
-    if (!empty($_FILES['attachments']['name'][0])) {
-        $uploadDir = '../uploads/quotations/' . $quotationId . '/';
-        if (!file_exists($uploadDir)) mkdir($uploadDir, 0777, true);
-
-        foreach ($_FILES['attachments']['tmp_name'] as $key => $tmp_name) {
-            if ($_FILES['attachments']['error'][$key] === UPLOAD_ERR_OK) {
-                $filename = basename($_FILES['attachments']['name'][$key]);
-                $destination = $uploadDir . $filename;
-                if (move_uploaded_file($tmp_name, $destination)) {
-                    $fileStmt = $db->prepare("INSERT INTO quotation_attachments 
-                        (quotation_id, file_path, uploaded_at) VALUES (:quotation_id, :file_path, NOW())");
-                    $fileStmt->execute([
-                        ':quotation_id' => $quotationId,
-                        ':file_path' => 'uploads/quotations/' . $quotationId . '/' . $filename
-                    ]);
+    // Handle photo uploads
+    $uploadedPhotoPaths = [];
+    if (!empty($_FILES['photos']['name'][0])) {
+        $uploadDir = __DIR__ . '/../uploads/quotations/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        foreach ($_FILES['photos']['tmp_name'] as $idx => $tmpName) {
+            if ($_FILES['photos']['error'][$idx] === UPLOAD_ERR_OK) {
+                $originalName = basename($_FILES['photos']['name'][$idx]);
+                $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+                $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+                if (in_array($ext, $allowed)) {
+                    $newName = 'quote_' . uniqid() . '.' . $ext;
+                    $dest = $uploadDir . $newName;
+                    if (move_uploaded_file($tmpName, $dest)) {
+                        $uploadedPhotoPaths[] = 'uploads/quotations/' . $newName;
+                    }
                 }
             }
         }
     }
+    $photosStr = !empty($uploadedPhotoPaths) ? implode(',', $uploadedPhotoPaths) : null;
 
-    // Send notification to the selected provider
-    $notificationManager = new NotificationManager($db);
-    $notificationManager->notifyNewQuotationRequest($provider_id, [
-        'id' => $quotationId,
-        'service_type' => $service_type,
-        'customer_name' => $_SESSION['user_name'] ?? 'Customer'
-    ]);
+    $subcategory = isset($_POST['subcategory']) ? $_POST['subcategory'] : '';
+    $status = 'Awaiting Quote';
+    $stmt = $db->prepare("INSERT INTO quotations (customer_id, provider_id, service_type, subcategory, project_description, photos, status, created_at) VALUES (:customer_id, :provider_id, :service_type, :subcategory, :project_description, :photos, :status, NOW())");
+    $stmt->bindParam(':customer_id', $customer_id);
+    $stmt->bindParam(':provider_id', $provider_id);
+    $stmt->bindParam(':service_type', $service_type);
+    $stmt->bindParam(':subcategory', $subcategory);
+    $stmt->bindParam(':project_description', $project_description);
+    $stmt->bindParam(':photos', $photosStr);
+    $stmt->bindParam(':status', $status);
 
-    $db->commit();
+    if ($stmt->execute()) {
+        $quotationId = $db->lastInsertId();
 
-    $response = [
-        'success' => true,
-        'message' => 'Quotation request sent successfully.',
-        'quotation_id' => $quotationId
-    ];
-    
-    if ($isAjax) {
-        echo json_encode($response);
-        exit;
+        // Send notification to the selected provider
+        $notificationManager = new NotificationManager($db);
+        $notificationManager->notifyNewQuotationRequest($provider_id, [
+            'id' => $quotationId,
+            'service_type' => $service_type,
+            'customer_name' => $_SESSION['user_name'] ?? 'Customer'
+        ]);
+
+        $db->commit();
+
+        $response = [
+            'success' => true,
+            'message' => 'Quotation request sent successfully.',
+            'quotation_id' => $quotationId
+        ];
+
+        if ($isAjax) {
+            echo json_encode($response);
+            exit;
+        } else {
+            set_flash_message('success', $response['message']);
+            header('Location: ../customer/customer_dashboard.php');
+            exit;
+        }
     } else {
-        set_flash_message('success', $response['message']);
-        header('Location: ../customer/customer_dashboard.php');
-        exit;
+        $db->rollBack();
+        $errorInfo = $stmt->errorInfo();
+        $errorMsg = isset($errorInfo[2]) ? $errorInfo[2] : 'Unknown error.';
+        if ($isAjax) {
+            echo json_encode(['success' => false, 'message' => 'Could not send request. DB Error: ' . $errorMsg]);
+            exit();
+        } else {
+            set_flash_message('error', 'There was an error submitting your request. DB Error: ' . $errorMsg);
+            header('Location: ../customer/request_quotation.php');
+            exit();
+        }
     }
 
 } catch (Exception $e) {
