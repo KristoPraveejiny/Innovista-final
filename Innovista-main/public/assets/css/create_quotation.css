@@ -1,23 +1,210 @@
+
+body {
+    background: #f5f7fa;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+.card-pro {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(30, 182, 233, 0.13);
+    padding: 2.5rem 2.5rem 2rem 2.5rem;
+    max-width: 900px;
+    margin: 2.5rem auto 2rem auto;
+}
+.quotation-title-pro {
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: #18181b;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+.card-section-pro {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1.5rem 2rem 1.5rem 2rem;
+    margin-bottom: 2.2rem;
+    box-shadow: 0 2px 12px rgba(30,182,233,0.04);
+}
+.quotation-row-pro {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.1rem;
+}
+.quotation-label-pro {
+    min-width: 140px;
+    font-weight: 700;
+    color: #120863;
+    font-size: 1.08rem;
+    margin-right: 1.2rem;
+}
+.quotation-value-pro {
+    color: #252541;
+    font-size: 1.08rem;
+    flex: 1;
+    word-break: break-word;
+    font-weight: 600;
+}
+.service-subcat-pro {
+    color: #111112;
+    font-weight: 600;
+}
+.quotation-images-pro {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 0.5rem;
+}
+.quotation-thumb-pro {
+    max-width: 120px;
+    max-height: 120px;
+    border-radius: 10px;
+    border: 2px solid #e0e0e0;
+    box-shadow: 0 2px 8px #e0e7ff33;
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.quotation-thumb-pro:hover {
+    box-shadow: 0 6px 24px #1eb6e933;
+    transform: scale(1.04);
+}
+.big-image-modal-pro {
+    display: none;
+    position: fixed;
+    z-index: 99999;
+    left: 0; top: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.85);
+    align-items: center;
+    justify-content: center;
+}
+.big-image-modal-pro[style*="display: flex"] {
+    display: flex !important;
+}
+.big-image-pro {
+    max-width: 92vw;
+    max-height: 92vh;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px #0008;
+    display: block;
+    margin: auto;
+    z-index: 100000;
+}
+.big-image-close-pro {
+    position: absolute;
+    top: 30px;
+    right: 50px;
+    font-size: 2.5rem;
+    color: #fff;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 100001;
+    transition: color 0.2s;
+}
+.big-image-close-pro:hover {
+    color: #1eb6e9;
+}
+.quotation-form-pro {
+    margin-top: 2.5rem;
+}
+.form-row-pro {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 18px;
+}
+.form-group-pro {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.2rem;
+}
+.form-group-pro label {
+    font-weight: 600;
+    color: #22223b;
+    font-size: 1.08rem;
+    margin-bottom: 0.3rem;
+}
+.form-group-pro input,
+.form-group-pro textarea {
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0.7rem 1rem;
+    font-size: 1.05rem;
+    background: #f8fafc;
+    transition: border 0.2s;
+    outline: none;
+}
+.form-group-pro input:focus,
+.form-group-pro textarea:focus {
+    border-color: #0d9488;
+    background: #fff;
+}
+.form-group-pro textarea {
+    resize: vertical;
+    min-height: 48px;
+    max-height: 180px;
+}
+.btn-submit-pro {
+    background: linear-gradient(90deg, #0d9488 0%, #14b8a6 100%);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.08rem;
+    border: none;
+    border-radius: 8px;
+    padding: 0.85rem 2.2rem;
+    margin-top: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(13,148,136,0.08);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.btn-submit-pro:hover {
+    background: linear-gradient(90deg, #14b8a6 0%, #0d9488 100%);
+    box-shadow: 0 4px 16px rgba(13,148,136,0.13);
+}
+.timeline-row-pro {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 18px;
+}
+.timeline-group-pro {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.timeline-group-pro label {
+    font-weight: 600;
+    color: #22223b;
+    font-size: 1.08rem;
+    margin-bottom: 0.3rem;
+}
+@media (max-width: 900px) {
+    .card-pro { padding: 1.2rem 0.5rem; }
+    .card-section-pro { padding: 1rem 0.5rem; }
+}
+@media (max-width: 700px) {
+    .form-row-pro, .timeline-row-pro { flex-direction: column; gap: 0.5rem; }
+    .card-pro { padding: 0.7rem 0.1rem; }
+    .quotation-title-pro { font-size: 1.3rem; }
+}
 /* Quotation Creation Form Styles */
 .quotation-container {
-    max-width: 650px;
+    max-width: 900px;
     margin: 40px auto;
-   background: url('https://images.unsplash.com/photo-1533090161767-e6ffed986c88?q=80') center center/cover no-repeat;
+    background: none;
     border-radius: 12px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    box-shadow: none;
     padding: 32px 36px 24px 36px;
     font-family: 'Segoe UI', Arial, sans-serif;
 }
 .quotation-container h2 {
     text-align: center;
-    color: #2c3e50;
+    color: #18181b;
     margin-bottom: 28px;
     font-size: 2rem;
     font-weight: 600;
 }
 .quotation-details {
     margin-bottom: 24px;
-    background: #f8f9fa;
+    background: #fff;
     border-radius: 8px;
     padding: 18px 20px;
     font-size: 1rem;
@@ -26,7 +213,7 @@
     margin-bottom: 10px;
 }
 .quotation-details strong {
-    color: #34495e;
+    color: #18181b;
 }
 .quotation-images {
     margin-bottom: 16px;
@@ -40,7 +227,7 @@
 .styled-form label {
     display: block;
     margin-bottom: 6px;
-    color: #2c3e50;
+    color: #22223b;
     font-weight: 500;
 }
 .styled-form input[type="number"],
@@ -52,7 +239,7 @@
     border-radius: 6px;
     margin-bottom: 16px;
     font-size: 1rem;
-    background: #f4f6f8;
+    background: #f8fafc;
     transition: border-color 0.2s;
 }
 .styled-form input[type="number"]:focus,
@@ -63,7 +250,7 @@
 }
 .styled-form button {
     width: 100%;
-    background: linear-gradient(90deg, #5b646a 0%, #718898 100%);
+    background: linear-gradient(90deg, #0d9488 0%, #14b8a6 100%);
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -76,7 +263,7 @@
     margin-top: 10px;
 }
 .styled-form button:hover {
-    background: linear-gradient(90deg, #2980b9 0%, #3498db 100%);
+    background: linear-gradient(90deg, #14b8a6 0%, #0d9488 100%);
 }
 .timeline-row {
     display: flex;

@@ -97,7 +97,7 @@ if (isset($_SESSION['flash_message'])) {
     </aside>
 
     <!-- Provider List -->
-    <!-- Debug info removed -->
+    
     <section class="provider-list-container">
         <?php if (empty($providers)): ?>
             <div style="padding:2rem; text-align:center; color:#888; font-size:1.2rem;">No providers found for this service.</div>
@@ -157,7 +157,7 @@ if (isset($_SESSION['flash_message'])) {
                 </div>
                 <div class="provider-actions">
                     <button type="button" class="btn btn-primary btn-book-consultation">Book Consultation</button>
-                    <form class="quote-request-form" data-provider-id="<?php echo htmlspecialchars($provider['provider_id']); ?>" data-service-type="<?php echo htmlspecialchars($provider['main_service']); ?>" data-subcategory="<?php echo isset($_GET['subcategory']) ? htmlspecialchars($_GET['subcategory']) : ''; ?>" data-project-description="Request for <?php echo htmlspecialchars($provider['main_service']); ?> - <?php echo isset($_GET['subcategory']) ? htmlspecialchars($_GET['subcategory']) : ''; ?>" style="display:inline;">
+                    <form class="quote-request-form" data-provider-id="<?php echo htmlspecialchars($provider['provider_id']); ?>" data-service-type="<?php echo htmlspecialchars($selectedService); ?>" data-subcategory="<?php echo isset($_GET['subcategory']) ? htmlspecialchars($_GET['subcategory']) : ''; ?>" data-project-description="Request for <?php echo htmlspecialchars($selectedService); ?><?php echo isset($_GET['subcategory']) ? ' - ' . htmlspecialchars($_GET['subcategory']) : ''; ?>" style="display:inline;">
                         <button type="button" class="btn btn-secondary btn-request-quote">Request a Quote</button>
                     </form>
                 </div>
@@ -344,6 +344,7 @@ if (isset($_SESSION['flash_message'])) {
 }
 </style>
 <script src="assets/js/serviceprovider.js"></script>
+<script src="assets/js/service-provider.js"></script>
 <?php 
 // Output the booking modal at the end of the body
 echo $bookingModalHtml;

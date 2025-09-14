@@ -40,16 +40,17 @@ $quote = null;
 $is_custom_quote = false; // Flag to determine if it's a provider's custom quote
 
 if ($quote_type === 'custom') {
-    // Fetch custom quotation details from `custom_quotations`
-    // Ensure this customer is the owner or admin
+    // Fetch custom quotation details and join original request for service_type and subcategory
     $stmt = $db->prepare('
         SELECT 
             cq.id, cq.quotation_id AS original_request_id, cq.provider_id, cq.customer_id, 
             cq.amount, cq.advance, cq.start_date, cq.end_date, cq.validity, cq.provider_notes, 
             cq.photos AS custom_quote_photos, cq.status, cq.created_at, cq.project_description,
+            orig.service_type, orig.subcategory,
             prov.name as provider_name, prov.email as provider_email,
             cust.name as customer_name, cust.email as customer_email
         FROM custom_quotations cq 
+        JOIN quotations orig ON cq.quotation_id = orig.id
         JOIN users prov ON cq.provider_id = prov.id 
         JOIN users cust ON cq.customer_id = cust.id
         WHERE cq.id = :id AND (cq.customer_id = :customer_id OR :user_role = "admin")
@@ -67,7 +68,7 @@ $stmt->bindParam(':user_role', $user_role);    $stmt->execute();
     // Ensure this customer is the owner or admin
     $stmt = $db->prepare('
         SELECT 
-            q.id, q.customer_id, q.provider_id, q.service_type, q.project_description, 
+            q.id, q.customer_id, q.provider_id, q.service_type, q.subcategory, q.project_description, 
             q.status, q.created_at, q.photos AS request_photos,
             prov.name as provider_name, prov.email as provider_email,
             cust.name as customer_name, cust.email as customer_email
@@ -121,7 +122,8 @@ if ($is_custom_quote) {
     <h3>Quotation Details</h3>
     <div class="details-list">
         <p><strong>Provider:</strong> <?php echo htmlspecialchars($quote['provider_name']); ?></p>
-        <p><strong>Service Type:</strong> <?php echo htmlspecialchars($quote['service_type'] ?? 'N/A'); ?></p>
+    <p><strong>Service Type:</strong> <?php echo htmlspecialchars($quote['service_type'] ?? 'N/A'); ?></p>
+    <p><strong>Subcategory:</strong> <?php echo htmlspecialchars($quote['subcategory'] ?? 'N/A'); ?></p>
         <p><strong>Project Description:</strong> <?php echo htmlspecialchars($is_custom_quote ? $quote['project_description'] : $quote['project_description']); ?></p>
         <p><strong>Status:</strong> <span class="status-badge status-<?php 
             $status_lower = strtolower($quote['status']);

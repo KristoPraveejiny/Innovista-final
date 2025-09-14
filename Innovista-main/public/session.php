@@ -77,16 +77,13 @@ function getImageSrc(mixed $rawImagePath): string {
         // It's a full URL, use it directly
         return htmlspecialchars($imagePath);
     } else {
-        // It's a relative path. Assume it's relative to the 'public' directory from the web server's perspective.
-        // We need to determine if the current script is being executed from the 'admin' folder.
-        $base_url_prefix = '';
-        // Check if the current script path contains '/admin/'
-        // $_SERVER['SCRIPT_NAME'] gives the URL path, e.g., '/Innovista-final/Innovista-main/admin/some_page.php'
-        if (str_contains($_SERVER['SCRIPT_NAME'], '/admin/')) {
-            $base_url_prefix = '../public/'; // From admin/ to public/
+        // If the path starts with 'uploads/', use '../uploads/' as the prefix (for customer/provider)
+        if (str_starts_with($imagePath, 'uploads/')) {
+            return htmlspecialchars('../' . $imagePath);
         }
-        // This is where the concatenation happens: $base_url_prefix . $imagePath
-        return htmlspecialchars($base_url_prefix . $imagePath);
+        // Otherwise, fallback to previous logic for admin
+        $base_url_prefix = '../public/';
+        return htmlspecialchars($base_url_prefix . ltrim($imagePath, '/'));
     }
 }
 
