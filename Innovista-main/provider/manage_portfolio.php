@@ -1,8 +1,8 @@
 <?php
-require_once '../config/session.php';
-protectPage('provider');
 $pageTitle = 'Manage Portfolio';
 require_once 'provider_header.php';
+require_once '../config/session.php';
+protectPage('provider');
 require_once '../config/Database.php';
 $provider_id = $_SESSION['user_id'] ?? 0;
 $db = (new Database())->getConnection();

@@ -1,9 +1,9 @@
 <?php
+$pageTitle = 'Provider Dashboard';
 require_once '../config/session.php';
-$pageTitle = './Provider Dashboard';
-require_once './provider_header.php';
 require_once '../config/Database.php';
 protectPage('provider');
+require_once 'provider_header.php';
 $provider_id = $_SESSION['user_id'];
 $db = (new Database())->getConnection();
 $count_stmt = $db->prepare('SELECT COUNT(*) FROM quotations WHERE provider_id = :provider_id AND (status = "Awaiting Quote" OR status = "Awaiting Your Quote")');
@@ -100,5 +100,9 @@ $active_projects = [ ['customer' => 'Alice Johnson', 'project' => 'Living Room R
         </div>
     </div>
 </div>
+
+            </main>
+        </div>
+    </div>
 
 <?php require_once 'provider_footer.php'; ?>

@@ -8,8 +8,30 @@ if (session_status() == PHP_SESSION_NONE) {
  * Checks if a user is currently logged in by checking for the session user_id.
  * @return bool True if user is logged in, false otherwise.
  */
-function isUserLoggedIn() {
-    return isset($_SESSION['user_id']);
+if (!function_exists('isUserLoggedIn')) {
+    function isUserLoggedIn() {
+        return isset($_SESSION['user_id']);
+    }
+}
+
+/**
+ * Returns the user's ID from the session.
+ * @return int|null The user's ID or null if not logged in.
+ */
+if (!function_exists('getUserId')) {
+    function getUserId(): ?int {
+        return $_SESSION['user_id'] ?? null;
+    }
+}
+
+/**
+ * Returns the user's role from the session.
+ * @return string|null The user's role (e.g., 'admin', 'customer', 'provider') or null if not logged in.
+ */
+if (!function_exists('getUserRole')) {
+    function getUserRole(): ?string {
+        return $_SESSION['user_role'] ?? null;
+    }
 }
 
 /**

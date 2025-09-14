@@ -1,4 +1,14 @@
 <?php
+    // Start session if not already started
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    // Include session functions if not already included
+    if (!function_exists('isUserLoggedIn')) {
+        require_once __DIR__ . '/../public/session.php';
+    }
+    
     $currentPage = basename($_SERVER['SCRIPT_NAME']);
 ?>
 <!DOCTYPE html>
@@ -135,32 +145,7 @@
                 </div>
                 <div class="header-right" style="display: flex; align-items: center; gap: 1.5rem;">
                     <!-- Notification Bell -->
-                    <div class="notification-bell-wrapper" style="position: relative;">
-                        <button id="notificationBell" style="background: none; border: none; cursor: pointer; position: relative;">
-                            <i class="fas fa-bell" style="font-size: 1.7rem; color: #0d9488;"></i>
-                            <span id="notificationCount" style="display:none; position: absolute; top: -6px; right: -6px; background: #e11d48; color: #fff; border-radius: 50%; font-size: 0.8rem; padding: 2px 6px; font-weight: 700;">0</span>
-                        </button>
-                        <div id="notificationDropdown" style="display:none; position: absolute; right: 0; top: 2.2rem; background: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.13); border-radius: 10px; min-width: 320px; max-width: 400px; z-index: 1001; overflow: hidden;">
-                            <div style="padding: 1rem; border-bottom: 1px solid #eee; font-weight: 600; color: #222;">Notifications</div>
-                            <div id="notificationList" style="max-height: 320px; overflow-y: auto;">
-                                <div style="padding: 1rem; color: #888; text-align: center;">No notifications yet.</div>
-                            </div>
-                        </div>
-                    </div>
+                    <?php include '../notifications/working_bell.php'; ?>
                 </div>
             </header>
-            <script>
-            // Notification bell toggle
-            document.addEventListener('DOMContentLoaded', function() {
-                var bell = document.getElementById('notificationBell');
-                var dropdown = document.getElementById('notificationDropdown');
-                bell.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-                });
-                document.addEventListener('click', function(e) {
-                    if (dropdown.style.display === 'block') dropdown.style.display = 'none';
-                });
-            });
-            </script>
             <main class="main-content">

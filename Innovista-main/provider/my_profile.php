@@ -1,11 +1,8 @@
 <?php
-require_once '../config/session.php';
-protectPage('provider');
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
 $pageTitle = 'My Profile';
 require_once '../provider/provider_header.php';
+require_once '../config/session.php';
+protectPage('provider');
 require_once '../config/Database.php';
 $provider_id = $_SESSION['user_id'] ?? 0;
 $db = (new Database())->getConnection();
