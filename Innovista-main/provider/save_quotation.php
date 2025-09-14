@@ -1,14 +1,25 @@
 <?php
 require_once '../config/session.php';
 require_once '../config/Database.php';
-require_once '../classes/NotificationManager.php';
+require_once '../notifications/NotificationManager.php';
 protectPage('provider');
 
-header('Content-Type: application/json');
+// Check if this is an AJAX request
+$isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
+
+if ($isAjax) {
+    header('Content-Type: application/json');
+}
 
 function sendError($message, $code = 400) {
+    global $isAjax;
     http_response_code($code);
-    echo json_encode(['success' => false, 'message' => $message]);
+    if ($isAjax) {
+        echo json_encode(['success' => false, 'message' => $message]);
+    } else {
+        // For regular form submission, redirect with error
+        header('Location: ../provider/provider_dashboard.php?error=' . urlencode($message));
+    }
     exit;
 }
 
@@ -49,35 +60,6 @@ try {
     $stmt->execute();
     $quotation = $stmt->fetch(PDO::FETCH_ASSOC);
 
-<<<<<<< HEAD
-    // Send notification to customer about new quotation
-    try {
-        require_once '../notifications/NotificationManager.php';
-        $notificationManager = new NotificationManager($db);
-        
-        // Get quotation details for notification
-        $stmt = $db->prepare('SELECT service_type, project_description FROM quotations WHERE id = ?');
-        $stmt->execute([$quotation_id]);
-        $quotationDetails = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        $notificationManager->notifyNewQuotationReceived($customer_id, [
-            'id' => $quotation_id,
-            'amount' => $amount,
-            'service_type' => $quotationDetails['service_type'] ?? 'Service',
-            'provider_name' => $_SESSION['user_name'] ?? 'Provider'
-        ]);
-    } catch (Exception $e) {
-        // Log error but don't stop the process
-        error_log("Failed to send notification to customer: " . $e->getMessage());
-    }
-
-    // Redirect to customer dashboard with a success message
-    header('Location: ../customer/customer_dashboard.php?quote_sent=1&id=' . $quotation_id);
-    exit();
-} else {
-    echo '<div style="color:red;">Invalid request.</div>';
-}
-=======
     if (!$quotation) {
         throw new Exception('Quotation not found');
     }
@@ -117,25 +99,35 @@ try {
         $updateStmt = $db->prepare('UPDATE quotations SET status = "Quoted" WHERE id = :id');
         $updateStmt->execute([':id' => $quotation_id]);
 
-        // Send notification to customer
-        $notificationManager = new NotificationManager($db);
-        if (!$notificationManager->notifyCustomerQuotationSubmitted(
-            $quotation['customer_id'],
-            $_SESSION['user_id'],
-            $quotation_id,
-            $amount
-        )) {
-            throw new Exception('Failed to send notification to customer');
+        // Send notification to customer about new quotation
+        try {
+            $notificationManager = new NotificationManager($db);
+            
+            $notificationManager->notifyNewQuotationReceived($quotation['customer_id'], [
+                'id' => $quotation_id,
+                'amount' => $amount,
+                'service_type' => $quotation['service_type'] ?? 'Service',
+                'provider_name' => $_SESSION['user_name'] ?? 'Provider'
+            ]);
+        } catch (Exception $e) {
+            // Log error but don't stop the process
+            error_log("Failed to send notification to customer: " . $e->getMessage());
         }
 
         // Commit the transaction
         $db->commit();
 
-        echo json_encode([
-            'success' => true,
-            'message' => 'Quotation has been submitted successfully',
-            'quotation_id' => $quotation_id
-        ]);
+        if ($isAjax) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Quotation has been submitted successfully',
+                'quotation_id' => $quotation_id
+            ]);
+        } else {
+            // For regular form submission, redirect to dashboard with success message
+            header('Location: ../provider/provider_dashboard.php?success=Quotation+submitted+successfully');
+            exit;
+        }
 
     } catch (Exception $e) {
         // Rollback the transaction if anything failed
@@ -149,14 +141,9 @@ try {
     }
 } catch (Exception $e) {
     error_log("Error in save_quotation.php: " . $e->getMessage());
-    echo json_encode([
-        'success' => false,
-        'message' => 'Failed to save quotation: ' . $e->getMessage()
-    ]);
+    sendError('Failed to save quotation: ' . $e->getMessage());
 } catch (PDOException $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'An error occurred: ' . $e->getMessage()
-    ]);
-} 
->>>>>>> aa57165eda4ae6bb88be077dc8252796dcb05bd9
+    error_log("Database error in save_quotation.php: " . $e->getMessage());
+    sendError('An error occurred: ' . $e->getMessage());
+}
+?>

@@ -25,24 +25,24 @@ $transactions = [
 <!-- Stat Cards -->
 <div class="stats-container-customer">
     <div class="stat-card-customer">
-        <div class="stat-icon-customer green"><i class="fas fa-dollar-sign"></i></div>
+        <div class="stat-icon-customer green"><i class="fas fa-coins"></i></div>
         <div class="stat-info-customer">
             <h4>Total Earnings (All Time)</h4>
-            <p>$<?php echo number_format($stats['total_earnings'], 2); ?></p>
+            <p>Rs. <?php echo number_format($stats['total_earnings'], 2); ?></p>
         </div>
     </div>
     <div class="stat-card-customer">
         <div class="stat-icon-customer yellow"><i class="fas fa-hourglass-half"></i></div>
         <div class="stat-info-customer">
             <h4>Pending Payout</h4>
-            <p>$<?php echo number_format($stats['pending_payout'], 2); ?></p>
+            <p>Rs. <?php echo number_format($stats['pending_payout'], 2); ?></p>
         </div>
     </div>
     <div class="stat-card-customer">
         <div class="stat-icon-customer blue"><i class="fas fa-calendar-alt"></i></div>
         <div class="stat-info-customer">
             <h4>This Month's Earnings</h4>
-            <p>$<?php echo number_format($stats['this_month'], 2); ?></p>
+            <p>Rs. <?php echo number_format($stats['this_month'], 2); ?></p>
         </div>
     </div>
 </div>
@@ -69,7 +69,7 @@ $transactions = [
                         <td><?php echo htmlspecialchars($t['project']); ?></td>
                         <td><?php echo htmlspecialchars($t['type']); ?></td>
                         <td style="color: <?php echo $t['amount'] < 0 ? '#e74c3c' : '#27ae60'; ?>; font-weight: 600;">
-                            <?php echo $t['amount'] < 0 ? '-' : '+'; ?>$<?php echo number_format(abs($t['amount']), 2); ?>
+                            <?php echo $t['amount'] < 0 ? '-' : '+'; ?>Rs. <?php echo number_format(abs($t['amount']), 2); ?>
                         </td>
                         <td>
                             <span class="status-badge status-<?php echo strtolower(str_replace(' ', '-', $t['status'])); ?>">

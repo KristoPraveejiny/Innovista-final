@@ -46,7 +46,7 @@ if (!$quote) {
 		<input type="hidden" name="quotation_id" value="<?php echo $quotation_id; ?>">
 		<div class="form-row">
 			<div class="form-group">
-				<label for="amount">Quotation Amount (₹):</label>
+				<label for="amount">Quotation Amount (Rs.):</label>
 				<input type="number" name="amount" id="amount" required min="0" step="0.01" placeholder="Enter total amount">
 			</div>
 			<div class="form-group">
@@ -54,7 +54,7 @@ if (!$quote) {
 				<input type="number" name="advance" id="advance" readonly placeholder="Auto-calculated">
 			</div>
 			<div class="form-group">
-				<label for="extra_amount">Extra Amount (₹):</label>
+				<label for="extra_amount">Extra Amount (Rs.):</label>
 				<input type="number" name="extra_amount" id="extra_amount" min="0" step="0.01" placeholder="Any extra charges">
 			</div>
 		</div>
