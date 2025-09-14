@@ -1,0 +1,203 @@
+<?php
+require_once '../config/Database.php';
+
+class NotificationManager {
+    private $db;
+    private $table = 'notifications';
+
+    public function __construct($db) {
+        $this->db = $db;
+    }
+
+    // Get notifications for a user with sender details
+    public function getUserNotifications($userId) {
+        $query = "SELECT n.*, u.name as sender_name 
+                FROM " . $this->table . " n
+                LEFT JOIN users u ON 
+                    CASE 
+                        WHEN n.type = 'quotation_request' THEN u.id = n.user_id
+                        ELSE u.id = (SELECT CASE 
+                                            WHEN n.type IN ('quotation_submitted', 'quotation_rejected') THEN provider_id 
+                                            WHEN n.type = 'quotation_accepted' THEN customer_id 
+                                            ELSE NULL 
+                                        END 
+                                    FROM quotations WHERE id = n.related_id)
+                    END
+                WHERE n.user_id = :user_id 
+                ORDER BY n.created_at DESC";
+                
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([':user_id' => $userId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error in getUserNotifications: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    // Get count of unread notifications
+    public function getUnreadCount($userId) {
+        try {
+            $query = "SELECT COUNT(*) FROM " . $this->table . " 
+                    WHERE user_id = :user_id AND is_read = 0";
+                    
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([':user_id' => $userId]);
+            return $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            error_log("Error in getUnreadCount: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    // Mark a notification as read
+    public function markAsRead($notificationId, $userId) {
+        try {
+            $query = "UPDATE " . $this->table . " 
+                    SET is_read = 1 
+                    WHERE id = :id AND user_id = :user_id";
+                    
+            $stmt = $this->db->prepare($query);
+            return $stmt->execute([
+                ':id' => $notificationId,
+                ':user_id' => $userId
+            ]);
+        } catch (PDOException $e) {
+            error_log("Error in markAsRead: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Mark all notifications as read for a user
+    public function markAllAsRead($userId) {
+        try {
+            $query = "UPDATE " . $this->table . " 
+                    SET is_read = 1 
+                    WHERE user_id = :user_id";
+                    
+            $stmt = $this->db->prepare($query);
+            return $stmt->execute([':user_id' => $userId]);
+        } catch (PDOException $e) {
+            error_log("Error in markAllAsRead: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Send notification for new quotation request
+    public function notifyNewQuotationRequest($quotationId, $customerId, $projectTitle) {
+        try {
+            // Get customer name
+            $stmt = $this->db->prepare("SELECT name FROM users WHERE id = :customer_id");
+            $stmt->execute([':customer_id' => $customerId]);
+            $customerName = $stmt->fetch(PDO::FETCH_COLUMN);
+
+            // Get provider ID from quotation
+            $stmt = $this->db->prepare("SELECT provider_id FROM quotations WHERE id = :quotation_id");
+            $stmt->execute([':quotation_id' => $quotationId]);
+            $providerId = $stmt->fetch(PDO::FETCH_COLUMN);
+
+            if ($providerId) {
+                $query = "INSERT INTO " . $this->table . " 
+                        (user_id, title, message, type, related_id) 
+                        VALUES (:user_id, :title, :message, :type, :related_id)";
+
+                $stmt = $this->db->prepare($query);
+                return $stmt->execute([
+                    ':user_id' => $providerId,
+                    ':title' => 'New Quotation Request',
+                    ':message' => "You have received a new quotation request from {$customerName} for {$projectTitle}",
+                    ':type' => 'quotation_request',
+                    ':related_id' => $quotationId
+                ]);
+            }
+            return false;
+        } catch (PDOException $e) {
+            error_log("Error in notifyNewQuotationRequest: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Send notification when provider submits a quotation
+    public function notifyCustomerQuotationSubmitted($customerId, $providerId, $quotationId, $amount) {
+        try {
+            // Get provider name
+            $stmt = $this->db->prepare("SELECT name FROM users WHERE id = :provider_id");
+            $stmt->execute([':provider_id' => $providerId]);
+            $providerName = $stmt->fetch(PDO::FETCH_COLUMN);
+
+            $query = "INSERT INTO " . $this->table . " 
+                    (user_id, title, message, type, related_id) 
+                    VALUES (:user_id, :title, :message, :type, :related_id)";
+
+            $stmt = $this->db->prepare($query);
+            return $stmt->execute([
+                ':user_id' => $customerId,
+                ':title' => 'New Quotation Received',
+                ':message' => "{$providerName} has submitted a quotation for RM{$amount}",
+                ':type' => 'quotation_submitted',
+                ':related_id' => $quotationId
+            ]);
+        } catch (PDOException $e) {
+            error_log("Error in notifyCustomerQuotationSubmitted: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Notify provider when customer accepts quotation
+    public function notifyQuotationAccepted($providerId, $customerId, $quotationId, $projectTitle) {
+        try {
+            // Get customer name
+            $stmt = $this->db->prepare("SELECT name FROM users WHERE id = :customer_id");
+            $stmt->execute([':customer_id' => $customerId]);
+            $customerName = $stmt->fetch(PDO::FETCH_COLUMN);
+
+            $query = "INSERT INTO " . $this->table . " 
+                    (user_id, title, message, type, related_id) 
+                    VALUES (:user_id, :title, :message, :type, :related_id)";
+
+            $stmt = $this->db->prepare($query);
+            return $stmt->execute([
+                ':user_id' => $providerId,
+                ':title' => 'Quotation Accepted',
+                ':message' => "{$customerName} has accepted your quotation for project: {$projectTitle}",
+                ':type' => 'quotation_accepted',
+                ':related_id' => $quotationId
+            ]);
+        } catch (PDOException $e) {
+            error_log("Error in notifyQuotationAccepted: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Notify customer when provider rejects quotation
+    public function notifyQuotationRejected($customerId, $providerId, $quotationId, $reason = '') {
+        try {
+            // Get provider name
+            $stmt = $this->db->prepare("SELECT name FROM users WHERE id = :provider_id");
+            $stmt->execute([':provider_id' => $providerId]);
+            $providerName = $stmt->fetch(PDO::FETCH_COLUMN);
+
+            $message = "{$providerName} has rejected your quotation request";
+            if ($reason) {
+                $message .= ". Reason: {$reason}";
+            }
+
+            $query = "INSERT INTO " . $this->table . " 
+                    (user_id, title, message, type, related_id) 
+                    VALUES (:user_id, :title, :message, :type, :related_id)";
+
+            $stmt = $this->db->prepare($query);
+            return $stmt->execute([
+                ':user_id' => $customerId,
+                ':title' => 'Quotation Rejected',
+                ':message' => $message,
+                ':type' => 'quotation_rejected',
+                ':related_id' => $quotationId
+            ]);
+        } catch (PDOException $e) {
+            error_log("Error in notifyQuotationRejected: " . $e->getMessage());
+            return false;
+        }
+    }
+}

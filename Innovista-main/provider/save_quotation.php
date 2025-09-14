@@ -1,9 +1,25 @@
 <?php
 require_once '../config/session.php';
 require_once '../config/Database.php';
+require_once '../classes/NotificationManager.php';
 protectPage('provider');
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+header('Content-Type: application/json');
+
+function sendError($message, $code = 400) {
+    http_response_code($code);
+    echo json_encode(['success' => false, 'message' => $message]);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    sendError('Invalid request method', 405);
+}
+
+try {
+    $db = (new Database())->getConnection();
+    
+    // Validate input
     $quotation_id = intval($_POST['quotation_id'] ?? 0);
     $amount = floatval($_POST['amount'] ?? 0);
     $advance = floatval($_POST['advance'] ?? 0);
@@ -12,38 +28,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $validity = intval($_POST['validity'] ?? 0);
     $provider_notes = $_POST['provider_notes'] ?? '';
 
-    $db = (new Database())->getConnection();
-    // Fetch provider_id and customer_id from quotations table
-    $stmt = $db->prepare('SELECT provider_id, customer_id, photos FROM quotations WHERE id = :id');
-    $stmt->bindParam(':id', $quotation_id);
-    $stmt->execute();
-    $base = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!$base) {
-        echo '<div style="color:red;">Quotation not found.</div>';
-        exit();
+    if (!$quotation_id || !$amount) {
+        throw new Exception('Missing required fields');
     }
-    $provider_id = $base['provider_id'];
-    $customer_id = $base['customer_id'];
-    $photos = $base['photos'];
 
-    $stmt = $db->prepare('INSERT INTO custom_quotations (quotation_id, provider_id, customer_id, amount, advance, start_date, end_date, validity, provider_notes, photos, status) VALUES (:quotation_id, :provider_id, :customer_id, :amount, :advance, :start_date, :end_date, :validity, :provider_notes, :photos, "sent")');
-    $stmt->bindParam(':quotation_id', $quotation_id);
-    $stmt->bindParam(':provider_id', $provider_id);
-    $stmt->bindParam(':customer_id', $customer_id);
-    $stmt->bindParam(':amount', $amount);
-    $stmt->bindParam(':advance', $advance);
-    $stmt->bindParam(':start_date', $start_date);
-    $stmt->bindParam(':end_date', $end_date);
-    $stmt->bindParam(':validity', $validity);
-    $stmt->bindParam(':provider_notes', $provider_notes);
-    $stmt->bindParam(':photos', $photos);
-    $stmt->execute();
+    // Validate dates
+    if (!empty($start_date) && !strtotime($start_date)) {
+        throw new Exception('Invalid start date format');
+    }
+    if (!empty($end_date) && !strtotime($end_date)) {
+        throw new Exception('Invalid end date format');
+    }
+    if (!empty($start_date) && !empty($end_date) && strtotime($end_date) <= strtotime($start_date)) {
+        throw new Exception('End date must be after start date');
+    }
 
-    // Update the status of the original quotation to 'quote_sent'
-    $stmt = $db->prepare('UPDATE quotations SET status = "quote_sent" WHERE id = :id');
+    // Fetch quotation details
+    $stmt = $db->prepare('SELECT provider_id, customer_id, project_description, service_type FROM quotations WHERE id = :id');
     $stmt->bindParam(':id', $quotation_id);
     $stmt->execute();
+    $quotation = $stmt->fetch(PDO::FETCH_ASSOC);
 
+<<<<<<< HEAD
     // Send notification to customer about new quotation
     try {
         require_once '../notifications/NotificationManager.php';
@@ -71,3 +77,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else {
     echo '<div style="color:red;">Invalid request.</div>';
 }
+=======
+    if (!$quotation) {
+        throw new Exception('Quotation not found');
+    }
+
+    // Verify this provider owns this quotation
+    if ($quotation['provider_id'] != $_SESSION['user_id']) {
+        throw new Exception('Unauthorized access to this quotation');
+    }
+
+    // Start transaction
+    $db->beginTransaction();
+
+    try {
+        // Insert custom quotation
+        $stmt = $db->prepare('INSERT INTO custom_quotations (
+            quotation_id, provider_id, customer_id, amount, advance, 
+            start_date, end_date, validity, provider_notes, status, project_description
+        ) VALUES (
+            :quotation_id, :provider_id, :customer_id, :amount, :advance, 
+            :start_date, :end_date, :validity, :provider_notes, "sent", :project_description
+        )');
+        
+        $stmt->execute([
+            ':quotation_id' => $quotation_id,
+            ':provider_id' => $quotation['provider_id'],
+            ':customer_id' => $quotation['customer_id'],
+            ':amount' => $amount,
+            ':advance' => $advance,
+            ':start_date' => $start_date,
+            ':end_date' => $end_date,
+            ':validity' => $validity,
+            ':provider_notes' => $provider_notes,
+            ':project_description' => $quotation['project_description']
+        ]);
+
+        // Update the status of the original quotation
+        $updateStmt = $db->prepare('UPDATE quotations SET status = "Quoted" WHERE id = :id');
+        $updateStmt->execute([':id' => $quotation_id]);
+
+        // Send notification to customer
+        $notificationManager = new NotificationManager($db);
+        if (!$notificationManager->notifyCustomerQuotationSubmitted(
+            $quotation['customer_id'],
+            $_SESSION['user_id'],
+            $quotation_id,
+            $amount
+        )) {
+            throw new Exception('Failed to send notification to customer');
+        }
+
+        // Commit the transaction
+        $db->commit();
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Quotation has been submitted successfully',
+            'quotation_id' => $quotation_id
+        ]);
+
+    } catch (Exception $e) {
+        // Rollback the transaction if anything failed
+        $db->rollBack();
+        sendError($e->getMessage());
+    } catch (PDOException $e) {
+        // Rollback the transaction if anything failed
+        $db->rollBack();
+        error_log("Database error in save_quotation.php: " . $e->getMessage());
+        sendError('A database error occurred while processing your request');
+    }
+} catch (Exception $e) {
+    error_log("Error in save_quotation.php: " . $e->getMessage());
+    echo json_encode([
+        'success' => false,
+        'message' => 'Failed to save quotation: ' . $e->getMessage()
+    ]);
+} catch (PDOException $e) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'An error occurred: ' . $e->getMessage()
+    ]);
+} 
+>>>>>>> aa57165eda4ae6bb88be077dc8252796dcb05bd9

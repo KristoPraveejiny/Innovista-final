@@ -4,6 +4,7 @@
 require_once '../public/session.php';
 require_once '../handlers/flash_message.php';
 require_once '../config/Database.php';
+<<<<<<< HEAD
 
 // Check if this is an AJAX request
 $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
@@ -14,11 +15,40 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => 'Invalid request method']);
         exit();
+=======
+require_once '../classes/NotificationManager.php';
+
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
+
+$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+// Check login & role
+if (!isset($_SESSION['user_id'], $_SESSION['user_role']) || $_SESSION['user_role'] !== 'customer') {
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'You must be logged in as a customer.']);
+        exit;
+    } else {
+        header('Location: ../public/login.php');
+        exit;
+    }
+}
+
+// Method check
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    if ($isAjax) {
+        echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+        exit;
+    } else {
+        header('Location: ../customer/request_quotation.php');
+        exit;
+>>>>>>> aa57165eda4ae6bb88be077dc8252796dcb05bd9
     }
     header('Location: ../public/index.php');
     exit();
 }
 
+<<<<<<< HEAD
 // Ensure user is logged in as a customer
 if (!isUserLoggedIn() || getUserRole() !== 'customer') {
     if ($isAjax) {
@@ -43,12 +73,25 @@ if (empty($service_type) || empty($project_description)) {
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => 'Service type and project description are required.']);
         exit();
+=======
+// Validate required fields
+if (empty($_POST['service_type']) || empty($_POST['project_description']) || empty($_POST['provider_id'])) {
+    $msg = 'Service type, project description, and provider are required.';
+    if ($isAjax) {
+        echo json_encode(['success' => false, 'message' => $msg]);
+        exit;
+    } else {
+        set_flash_message('error', $msg);
+        header('Location: ../customer/request_quotation.php');
+        exit;
+>>>>>>> aa57165eda4ae6bb88be077dc8252796dcb05bd9
     }
     set_flash_message('error', 'Service type and project description are required.');
     header('Location: ../customer/request_quotation.php' . ($provider_id ? '?provider_id=' . $provider_id : ''));
     exit();
 }
 
+<<<<<<< HEAD
 $database = new Database();
 $conn = $database->getConnection();
 
@@ -109,10 +152,64 @@ try {
             set_flash_message('error', 'The selected provider is invalid or not approved. Your request could not be sent to them.');
             header('Location: ../customer/request_quotation.php');
             exit();
+=======
+$customer_id = $_SESSION['user_id'];
+$provider_id = $_POST['provider_id'];
+$service_type = $_POST['service_type'];
+$project_description = $_POST['project_description'];
+
+try {
+    $db = (new Database())->getConnection();
+
+    // Verify provider exists
+    $stmt = $db->prepare('SELECT id FROM users WHERE id = :id AND user_role = "provider"');
+    $stmt->execute([':id' => $provider_id]);
+    if (!$stmt->fetch()) {
+        throw new Exception('Selected provider is invalid.');
+    }
+
+    // Begin transaction
+    $db->beginTransaction();
+
+    // Insert quotation
+    $stmt = $db->prepare("INSERT INTO quotations 
+        (customer_id, provider_id, service_type, project_description, status, created_at) 
+        VALUES (:customer_id, :provider_id, :service_type, :project_description, :status, NOW())");
+
+    $stmt->execute([
+        ':customer_id' => $customer_id,
+        ':provider_id' => $provider_id,
+        ':service_type' => $service_type,
+        ':project_description' => $project_description,
+        ':status' => 'Awaiting Quote'
+    ]);
+
+    $quotationId = $db->lastInsertId();
+
+    // Handle file uploads
+    if (!empty($_FILES['attachments']['name'][0])) {
+        $uploadDir = '../uploads/quotations/' . $quotationId . '/';
+        if (!file_exists($uploadDir)) mkdir($uploadDir, 0777, true);
+
+        foreach ($_FILES['attachments']['tmp_name'] as $key => $tmp_name) {
+            if ($_FILES['attachments']['error'][$key] === UPLOAD_ERR_OK) {
+                $filename = basename($_FILES['attachments']['name'][$key]);
+                $destination = $uploadDir . $filename;
+                if (move_uploaded_file($tmp_name, $destination)) {
+                    $fileStmt = $db->prepare("INSERT INTO quotation_attachments 
+                        (quotation_id, file_path, uploaded_at) VALUES (:quotation_id, :file_path, NOW())");
+                    $fileStmt->execute([
+                        ':quotation_id' => $quotationId,
+                        ':file_path' => 'uploads/quotations/' . $quotationId . '/' . $filename
+                    ]);
+                }
+            }
+>>>>>>> aa57165eda4ae6bb88be077dc8252796dcb05bd9
         }
         set_flash_message('success', 'Your quote request has been sent to the selected provider!');
     }
 
+<<<<<<< HEAD
     // Insert into 'quotations' table
     $stmt_insert_quote = $conn->prepare("
         INSERT INTO quotations (customer_id, provider_id, service_type, project_description, status, created_at, photos)
@@ -174,3 +271,39 @@ try {
     header('Location: ../customer/request_quotation.php' . ($provider_id ? '?provider_id=' . $provider_id : ''));
     exit();
 }
+=======
+    // Send notification to the selected provider
+    $notificationManager = new NotificationManager($db);
+    $notificationManager->notifyNewQuotationRequestToProvider($quotationId, $customer_id, $provider_id, $service_type);
+
+    $db->commit();
+
+    $response = [
+        'success' => true,
+        'message' => 'Quotation request sent successfully.',
+        'quotation_id' => $quotationId
+    ];
+    if ($isAjax) {
+        echo json_encode($response);
+        exit;
+    } else {
+        set_flash_message('success', $response['message']);
+        header('Location: ../customer/my_projects.php');
+        exit;
+    }
+
+} catch (Exception $e) {
+    if ($db->inTransaction()) $db->rollBack();
+    error_log('Quotation Request Error: ' . $e->getMessage());
+
+    $msg = 'Failed to create quotation request. ' . $e->getMessage();
+    if ($isAjax) {
+        echo json_encode(['success' => false, 'message' => $msg]);
+        exit;
+    } else {
+        set_flash_message('error', $msg);
+        header('Location: ../customer/request_quotation.php');
+        exit;
+    }
+}
+>>>>>>> aa57165eda4ae6bb88be077dc8252796dcb05bd9
