@@ -19,7 +19,7 @@
     <title><?php echo isset($pageTitle) ? $pageTitle . ' - Innovista Provider' : 'Provider Dashboard - Innovista'; ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../public/assets/css/dashboard.css"> <!-- Link to the new unified CSS -->
+    <link rel="stylesheet" href="../public/assets/css/dashboard.css">
 
     <style>
     /* Fallback flash message style for guaranteed visibility */
@@ -52,30 +52,28 @@
         border: 1.5px solid #1a7f4f;
     }
     .flash-message.error {
-        background: #ffeaea;
+        background: #fdeaea;
         color: #c0392b;
         border: 1.5px solid #c0392b;
     }
-    .flash-message .flash-close-btn {
+    .flash-close-btn {
         position: absolute;
         top: 8px;
         right: 12px;
         background: none;
         border: none;
-        color: #888;
         font-size: 1.2rem;
         cursor: pointer;
-        font-weight: bold;
+        color: inherit;
+        opacity: 0.7;
         transition: color 0.2s;
-        z-index: 2;
-        padding: 0;
     }
-    .flash-message .flash-close-btn:hover {
-        color: #c0392b;
+    .flash-close-btn:hover {
+        opacity: 1;
     }
-    .flash-message.hide {
+    .hide {
         opacity: 0;
-        pointer-events: none;
+        transform: scale(0.95) translateY(-10px);
         transition: opacity 0.5s;
     }
     @keyframes fadeInScale {
@@ -83,9 +81,8 @@
         100% { opacity: 1; transform: scale(1) translateY(0); }
     }
     </style>
-
 </head>
-<body class="dashboard-body"> <!-- Add class to body -->
+<body class="user-dashboard-body">
     <!-- Flash message for profile update (guaranteed visibility) -->
     <?php if (function_exists('display_flash_message')): ?>
     <div class="flash-message-container" id="flashMessageContainer">
@@ -110,7 +107,8 @@
     });
     </script>
     <?php endif; ?>
-    <div class="dashboard-container">
+    
+    <div class="user-dashboard-container">
         <aside class="dashboard-sidebar" id="sidebar">
             <div class="sidebar-header">
                 <a href="../index.php" class="sidebar-logo">
@@ -132,20 +130,20 @@
             </div>
         </aside>
         
-        <div class="content-wrapper">
-            <header class="main-header-bar" style="display: flex; justify-content: space-between; align-items: center;">
-                <div class="header-left" style="display: flex; align-items: center; gap: 1.5rem;">
-                    <button class="menu-toggle" id="menu-toggle">
+        <div class="dashboard-content-wrapper">
+            <header class="dashboard-main-header">
+                <div class="header-left">
+                    <button class="dashboard-menu-toggle" id="dashboard-menu-toggle">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <div class="user-welcome">
+                    <div class="dashboard-user-profile">
                         <span>Welcome, <?php echo $_SESSION['user_name'] ?? 'Provider'; ?></span>
-                        <i class="fas fa-user-circle"></i>
+                        <i class="fas fa-user-circle dashboard-avatar-sm"></i>
                     </div>
                 </div>
-                <div class="header-right" style="display: flex; align-items: center; gap: 1.5rem;">
+                <div class="header-right">
                     <!-- Notification Bell -->
                     <?php include '../notifications/working_bell.php'; ?>
                 </div>
             </header>
-            <main class="main-content">
+            <main class="dashboard-main-content">

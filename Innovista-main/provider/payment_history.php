@@ -31,7 +31,7 @@ $payments = [
                     <td><?php echo htmlspecialchars($payment['date']); ?></td>
                     <td><?php echo htmlspecialchars($payment['project']); ?></td>
                     <td><?php echo htmlspecialchars($payment['type']); ?></td>
-                    <td>$<?php echo number_format($payment['amount'], 2); ?></td>
+                    <td>Rs. <?php echo number_format($payment['amount'], 2); ?></td>
                     <td><a href="<?php echo $payment['invoice_link']; ?>" class="btn-view">Download</a></td>
                 </tr>
                 <?php endforeach; else: ?>
