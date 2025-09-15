@@ -616,15 +616,40 @@ $isLoggedInFlag = isUserLoggedIn() ? 'true' : 'false';
    
     
 
-<script>
 document.addEventListener('DOMContentLoaded', function() {
-    const getAllServicesBtn = document.getElementById('getAllServicesBtn');
-    const getAllServicesBtnPainting = document.getElementById('getAllServicesBtnPainting');
-    const getAllServicesBtnRestoration = document.getElementById('getAllServicesBtnRestoration');
+    // Modal and button variables (must be defined before any function uses them)
     const modal = document.getElementById('serviceModal');
     const closeModal = document.querySelector('.close-service-modal');
     const modalTitle = document.getElementById('modalTitle');
     const serviceContent = document.getElementById('serviceContent');
+    const getAllServicesBtn = document.getElementById('getAllServicesBtn');
+    const getAllServicesBtnPainting = document.getElementById('getAllServicesBtnPainting');
+    const getAllServicesBtnRestoration = document.getElementById('getAllServicesBtnRestoration');
+
+    // Add event listeners to sidebar service category tabs
+    const serviceTabs = document.querySelectorAll('.service-tab');
+    serviceTabs.forEach(function(tab) {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent default button behavior
+            // Remove active class from all tabs
+            serviceTabs.forEach(t => t.classList.remove('active'));
+            // Add active class to clicked tab
+            tab.classList.add('active');
+            // Determine category
+            let category = '';
+            if (tab.dataset.service === 'interior-design') {
+                category = 'Interior Design';
+            } else if (tab.dataset.service === 'painting') {
+                category = 'Painting';
+            } else if (tab.dataset.service === 'restoration') {
+                category = 'Restoration';
+            }
+            if (category) {
+                showServicesByCategory(category);
+                if (modal) modal.style.display = 'flex';
+            }
+        });
+    });
 }); 
  // Close modal when clicking X
     closeModal.addEventListener('click', function() {
@@ -664,7 +689,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // Get All Services button click handlers
+    Get All Services button click handlers
     getAllServicesBtn.addEventListener('click', function() {
         showServicesByCategory('Interior Design');
     });
@@ -779,10 +804,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             <p><strong>Address:</strong> ${provider.provider_address || 'Not provided'}</p>
                         </div>
                         
-                        ${firstImage ? `
+                        ${(firstImage && firstImage !== '${firstImage}') ? `
                             <div class="portfolio-section">
                                 <div class="portfolio-label">Portfolio:</div>
-                                <img src="../public/assets/images/${firstImage}" alt="Portfolio" class="portfolio-image" onerror="this.style.display='none'">
+                                <img src="assets/images/${firstImage}" alt="Portfolio" class="portfolio-image" onerror="this.style.display='none'">
                             </div>
                         ` : ''}
                     </div>
@@ -980,6 +1005,224 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         };
     
+</script>
+
+<script>
+// Modal and button variables (global scope)
+const modal = document.getElementById('serviceModal');
+const closeModal = document.querySelector('.close-service-modal');
+const modalTitle = document.getElementById('modalTitle');
+const serviceContent = document.getElementById('serviceContent');
+const getAllServicesBtn = document.getElementById('getAllServicesBtn');
+const getAllServicesBtnPainting = document.getElementById('getAllServicesBtnPainting');
+const getAllServicesBtnRestoration = document.getElementById('getAllServicesBtnRestoration');
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching for static service cards (not modal)
+    const serviceTabs = document.querySelectorAll('.service-tab');
+    const serviceCards = document.querySelectorAll('.service-card');
+    serviceTabs.forEach(function(tab) {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Remove active from all tabs and cards
+            serviceTabs.forEach(t => t.classList.remove('active'));
+            serviceCards.forEach(card => card.classList.remove('active'));
+            // Add active to clicked tab and matching card
+            tab.classList.add('active');
+            const service = tab.getAttribute('data-service');
+            const card = document.querySelector('.service-card[data-service="' + service + '"]');
+            if (card) card.classList.add('active');
+        });
+    });
+
+    // Get All Services buttons for Painting and Restoration (robust event handler)
+    if (getAllServicesBtnPainting) {
+        getAllServicesBtnPainting.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Remove active from all tabs and cards
+            serviceTabs.forEach(function(t) { t.classList.remove('active'); });
+            serviceCards.forEach(function(card) { card.classList.remove('active'); });
+            // Add active to Painting tab and card
+            var tab = document.querySelector('.service-tab[data-service="painting"]');
+            var card = document.querySelector('.service-card[data-service="painting"]');
+            if (tab) tab.classList.add('active');
+            if (card) card.classList.add('active');
+        });
+    }
+    if (getAllServicesBtnRestoration) {
+        getAllServicesBtnRestoration.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Remove active from all tabs and cards
+            serviceTabs.forEach(function(t) { t.classList.remove('active'); });
+            serviceCards.forEach(function(card) { card.classList.remove('active'); });
+            // Add active to Restoration tab and card
+            var tab = document.querySelector('.service-tab[data-service="restoration"]');
+            var card = document.querySelector('.service-card[data-service="restoration"]');
+            if (tab) tab.classList.add('active');
+            if (card) card.classList.add('active');
+        });
+    }
+});
+
+// Function to show services by category
+function showServicesByCategory(category) {
+    modalTitle.textContent = `${category} Services`;
+    serviceContent.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><br>Loading services...</div>';
+    modal.style.display = 'flex';
+    fetch(`get_services.php?action=get_services_by_category&category=${encodeURIComponent(category)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.services && data.services.length > 0) {
+                    displayServices(data.services);
+                } else {
+                    serviceContent.innerHTML = `<div class="error">No ${category} services found. Please check if providers are available for this category.</div>`;
+                }
+            } else {
+                serviceContent.innerHTML = '<div class="error">Error: ' + data.message + '</div>';
+            }
+        })
+        .catch(error => {
+            serviceContent.innerHTML = '<div class="error">Error loading services. Please try again.</div>';
+            console.error('Error:', error);
+        });
+}
+
+// Function to display services in the modal
+function displayServices(services) {
+    if (!services || services.length === 0) {
+        serviceContent.innerHTML = '<div class="error">No services found.</div>';
+        return;
+    }
+    let html = '<div class="providers-grid">';
+    services.forEach(provider => {
+        const mainServices = provider.main_service.split(',').map(s => s.trim());
+        const subcategories = provider.subcategories.split(',').map(s => s.trim());
+        const portfolioImages = provider.portfolio ? provider.portfolio.split(',').map(s => s.trim()) : [];
+        const firstImage = portfolioImages.length > 0 ? portfolioImages[0] : '';
+        const currentCategory = modalTitle.textContent.replace(' Services', '');
+        let filteredMainServices = mainServices;
+        let filteredSubcategories = subcategories;
+        if (currentCategory === 'Painting') {
+            filteredMainServices = mainServices.filter(service => service.toLowerCase().includes('painting'));
+            filteredSubcategories = subcategories.filter(sub =>
+                sub.toLowerCase().includes('painting') ||
+                sub.toLowerCase().includes('paint') ||
+                sub.toLowerCase().includes('color') ||
+                sub.toLowerCase().includes('mural') ||
+                sub.toLowerCase().includes('waterproof') ||
+                sub.toLowerCase().includes('damp')
+            );
+        } else if (currentCategory === 'Interior Design') {
+            filteredMainServices = mainServices.filter(service =>
+                service.toLowerCase().includes('interior') || service.toLowerCase().includes('design')
+            );
+            filteredSubcategories = subcategories.filter(sub =>
+                sub.toLowerCase().includes('interior design') ||
+                sub.toLowerCase().includes('interior -') ||
+                sub.toLowerCase().includes('ceiling & lighting') ||
+                sub.toLowerCase().includes('space planning') ||
+                sub.toLowerCase().includes('modular kitchen') ||
+                sub.toLowerCase().includes('bathroom design') ||
+                sub.toLowerCase().includes('carpentry & woodwork') ||
+                sub.toLowerCase().includes('furniture design')
+            );
+        } else if (currentCategory === 'Restoration') {
+            filteredMainServices = mainServices.filter(service =>
+                service.toLowerCase().includes('restoration') || service.toLowerCase().includes('renovation')
+            );
+            filteredSubcategories = subcategories.filter(sub =>
+                sub.toLowerCase().includes('restoration') ||
+                sub.toLowerCase().includes('renovation') ||
+                sub.toLowerCase().includes('repair') ||
+                sub.toLowerCase().includes('plastering') ||
+                sub.toLowerCase().includes('floor') ||
+                sub.toLowerCase().includes('door') ||
+                sub.toLowerCase().includes('window') ||
+                sub.toLowerCase().includes('building') ||
+                sub.toLowerCase().includes('transformation')
+            );
+        }
+        if (filteredMainServices.length > 0 || filteredSubcategories.length > 0) {
+            html += `
+                <div class="provider-card">
+                    <div class="provider-header">
+                        <div>
+                            <h3 class="provider-name">
+                                ${provider.provider_name}
+                                <i class="fas fa-check-circle verified-badge" title="Verified Provider"></i>
+                            </h3>
+                        </div>
+                        <div class="provider-actions">
+                            <button class="btn-book-consultation" data-provider-id="${provider.provider_id || ''}" data-provider-name="${provider.provider_name}">Book Consultation</button>
+                            <button class="btn-request-quote" data-provider-id="${provider.provider_id || ''}" data-provider-name="${provider.provider_name}" data-service-type="${filteredMainServices[0] || ''}">Request a Quote</button>
+                        </div>
+                    </div>
+                    <div class="service-tags">
+                        ${filteredMainServices.map((service, index) =>
+                            `<span class="service-tag ${index === 0 ? 'primary' : 'secondary'}">${service}</span>`
+                        ).join('')}
+                        ${filteredSubcategories.map(sub =>
+                            `<span class="service-tag highlight">${sub}</span>`
+                        ).join('')}
+                    </div>
+                    <div class="contact-details">
+                        <p><strong>Email:</strong> ${provider.provider_email || 'Not provided'}</p>
+                        <p><strong>Phone:</strong> ${provider.provider_phone || 'Not provided'}</p>
+                        <p><strong>Address:</strong> ${provider.provider_address || 'Not provided'}</p>
+                    </div>
+                    ${firstImage ? `
+                        <div class="portfolio-section">
+                            <div class="portfolio-label">Portfolio:</div>
+                            <img src="../public/assets/images/${firstImage}" alt="Portfolio" class="portfolio-image" onerror="this.style.display='none'">
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+    });
+    html += '</div>';
+    serviceContent.innerHTML = html;
+    addButtonEventListeners();
+}
+
+// Function to add event listeners to modal buttons
+function addButtonEventListeners() {
+    // Book Consultation buttons
+    const bookConsultationBtns = document.querySelectorAll('#serviceModal .btn-book-consultation');
+    bookConsultationBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const providerId = this.getAttribute('data-provider-id');
+            if (providerId && providerId !== '') {
+                modal.style.display = 'none';
+                // ...existing code for booking modal logic...
+            } else {
+                alert('Provider information not available. Provider ID: ' + providerId);
+            }
+        });
+    });
+    // Request Quote buttons
+    const requestQuoteBtns = document.querySelectorAll('#serviceModal .btn-request-quote');
+    requestQuoteBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const providerId = this.getAttribute('data-provider-id');
+            const providerName = this.getAttribute('data-provider-name');
+            let serviceType = '';
+            if (this.hasAttribute('data-service-type')) {
+                serviceType = this.getAttribute('data-service-type');
+            }
+            window.selectedServiceType = serviceType;
+            if (providerId && providerId !== '') {
+                modal.style.display = 'none';
+                // ...existing code for quote modal logic...
+            } else {
+                alert('Provider information not available. Provider ID: ' + providerId);
+            }
+        });
+    });
+}
 </script>
 
 <script src="assets/js/serviceprovider.js"></script>
