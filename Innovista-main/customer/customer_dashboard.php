@@ -2,30 +2,18 @@
 // C:\xampp1\htdocs\Innovista-final\Innovista-main\customer\customer_dashboard.php
 
 // Include session and protect the page FIRST
-require_once '../public/session.php'; // Defines isUserLoggedIn, getUserRole, getUserId, getImageSrc
-require_once '../handlers/flash_message.php'; // For display_flash_message
+require_once '../config/session.php'; // Defines isUserLoggedIn, getUserRole, getUserId, getImageSrc
+// handlers/flash_message.php is now included by public/session.php, so set_flash_message is available globally.
+// REMOVED: require_once '../handlers/flash_message.php'; // This line caused the redeclaration error
 
 // --- User-specific authentication function ---
-// This function should be defined in public/session.php or a dedicated auth.php
-if (!function_exists('protectPage')) {
-    function protectPage(string $requiredRole): void {
-        if (!isUserLoggedIn()) {
-            header("Location: ../public/login.php");
-            exit();
-        }
-        // Allow admin to view customer/provider dashboards for management purposes
-        if (getUserRole() !== $requiredRole && getUserRole() !== 'admin') { 
-            set_flash_message('error', 'Access denied. You do not have permission to view this page.');
-            header("Location: ../public/index.php"); // Redirect to homepage or appropriate dashboard
-            exit();
-        }
-    }
-}
+// This function is defined in public/session.php, so it is available here.
+// Any duplicate definition if (!function_exists('protectPage')) { ... } should be removed from this file.
 protectPage('customer'); 
 
 // Now, include all other necessary files
 $pageTitle = 'Customer Dashboard';
-require_once '../includes/user_dashboard_header.php'; // This header will now have access to getImageSrc
+require_once '../includes/user_dashboard_header.php'; 
 require_once '../config/Database.php';
 
 // Get the customer ID and Name from the session
@@ -33,24 +21,21 @@ $customer_id = getUserId();
 $customer_name = htmlspecialchars($_SESSION['user_name'] ?? 'Customer'); // Fallback name
 
 $database = new Database();
-$conn = $database->getConnection(); // FIX: Get the PDO connection object
+$conn = $database->getConnection(); 
 
 // --- Fetch Stats for Cards ---
 
 // 1. Active Projects Count
-// Updated to explicitly join custom_quotations as projects reference custom_quotations.id
 $stmt_active = $conn->prepare("SELECT COUNT(p.id) as count FROM projects p JOIN custom_quotations cq ON p.quotation_id = cq.id WHERE cq.customer_id = :id AND p.status IN ('in_progress', 'awaiting_final_payment', 'disputed')");
 $stmt_active->bindParam(':id', $customer_id, PDO::PARAM_INT);
 $stmt_active->execute();
 $active_projects_count = $stmt_active->fetch(PDO::FETCH_ASSOC)['count'];
 
 // 2. Pending Quotes Count
-// Original requests not yet quoted by provider (q.status = 'Awaiting Quote')
-// Custom quotes sent by provider, awaiting customer action (cq.status = 'sent' or 'pending')
 $stmt_original_pending = $conn->prepare("
     SELECT COUNT(q.id) AS count
     FROM quotations q
-    WHERE q.customer_id = :id AND q.status = 'Awaiting Quote'
+    WHERE q.customer_id = :id AND q.status = 'Awaiting Quote' AND q.provider_id IS NOT NULL
 ");
 $stmt_original_pending->bindParam(':id', $customer_id, PDO::PARAM_INT);
 $stmt_original_pending->execute();
@@ -69,10 +54,7 @@ $pending_quotes_total_count = $original_quotes_pending_count + $custom_quotes_aw
 
 
 // 3. Unread Messages Count
-// Assuming messages in 'contacts' table are linked via email and 'is_read' flag
-// And assuming a customer can have messages directly (not just disputes/quotes)
 $unread_messages_count = 0;
-// First get the customer's email
 $stmt_customer_email = $conn->prepare("SELECT email FROM users WHERE id = :id");
 $stmt_customer_email->bindParam(':id', $customer_id, PDO::PARAM_INT);
 $stmt_customer_email->execute();
@@ -101,6 +83,13 @@ $stmt_payments_total = $conn->prepare("SELECT SUM(py.amount) as total_paid FROM 
 $stmt_payments_total->bindParam(':id', $customer_id, PDO::PARAM_INT);
 $stmt_payments_total->execute();
 $total_payments_made = $stmt_payments_total->fetch(PDO::FETCH_ASSOC)['total_paid'] ?? 0;
+
+// NEW STAT 3: Orders Awaiting Balance Payment
+// $balance_due_orders_count = 0;
+// $stmt_balance_due = $conn->prepare("SELECT COUNT(id) as count FROM orders WHERE user_id = :id AND status = 'advance_paid'");
+// $stmt_balance_due->bindParam(':id', $customer_id, PDO::PARAM_INT);
+// $stmt_balance_due->execute();
+// $balance_due_orders_count = $stmt_balance_due->fetch(PDO::FETCH_ASSOC)['count'];
 
 
 // --- Fetch Data for Tables ---
@@ -131,56 +120,119 @@ $pending_quotes_query = $conn->prepare("
     SELECT 'custom' as quote_type, cq.id as entity_id, prov.name as provider_name, cq.project_description, cq.status, cq.created_at
     FROM custom_quotations cq
     JOIN users prov ON cq.provider_id = prov.id
-    WHERE cq.customer_id = :id AND cq.status IN ('sent', 'pending') -- 'pending' might mean awaiting customer approval
+    WHERE cq.customer_id = :id AND cq.status IN ('sent', 'pending')
     ORDER BY created_at DESC
 ");
 $pending_quotes_query->bindParam(':id', $customer_id, PDO::PARAM_INT);
 $pending_quotes_query->execute();
 $pending_quotes = $pending_quotes_query->fetchAll(PDO::FETCH_ASSOC);
 
+
+// NEW: Fetch Orders Awaiting Balance Payment
+$orders_awaiting_balance_query = $conn->prepare("
+    SELECT id, order_date, total_amount, advance_amount, balance_due, status 
+    FROM orders 
+    WHERE user_id = :id AND status = 'advance_paid'
+    ORDER BY order_date DESC
+");
+// $orders_awaiting_balance_query->bindParam(':id', $customer_id, PDO::PARAM_INT);
+// $orders_awaiting_balance_query->execute();
+// $orders_awaiting_balance = $orders_awaiting_balance_query->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
 
 <!-- Header HTML provided by user_dashboard_header.php -->
+<main class="dashboard-main-content"> <!-- Ensure this main tag is opened for consistency -->
+    <?php // Flash message display
+    if (function_exists('display_flash_message')) {
+        echo '<div class="flash-message-container">';
+        display_flash_message();
+        echo '</div>';
+    }
+    ?>
 
-<h2>Customer Dashboard</h2>
-<p>Welcome back, <?php echo $customer_name; ?>! Manage your projects and find new services here.</p>
+    <h2>Customer Dashboard</h2>
+    <p>Welcome back, <?php echo $customer_name; ?>! Manage your projects and find new services here.</p>
 
-<div class="stats-container-customer">
-    <div class="stat-card-customer">
-        <div class="stat-icon-customer blue"><i class="fas fa-tasks"></i></div>
-        <div class="stat-info-customer"><h4>Active Projects</h4><p><?php echo $active_projects_count; ?></p></div>
+    <div class="stats-container-customer">
+        <div class="stat-card-customer">
+            <div class="stat-icon-customer blue"><i class="fas fa-tasks"></i></div>
+            <div class="stat-info-customer"><h4>Active Projects</h4><p><?php echo $active_projects_count; ?></p></div>
+        </div>
+        <div class="stat-card-customer">
+            <div class="stat-icon-customer yellow"><i class="fas fa-file-invoice"></i></div>
+            <div class="stat-info-customer"><h4>Pending Quotes</h4><p><?php echo $pending_quotes_total_count; ?></p></div>
+        </div>
+        <div class="stat-card-customer">
+            <div class="stat-icon-customer purple"><i class="fas fa-comments"></i></div>
+            <div class="stat-info-customer"><h4>Unread Messages</h4><p><?php echo $unread_messages_count; ?></p></div>
+        </div>
+        <!-- NEW STAT CARD 1: Completed Projects -->
+        <div class="stat-card-customer">
+            <div class="stat-icon-customer green"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-info-customer"><h4>Completed Projects</h4><p><?php echo $completed_projects_count; ?></p></div>
+        </div>
+        <!-- NEW STAT CARD 2: Total Payments Made -->
+        <div class="stat-card-customer">
+            <div class="stat-icon-customer primary-color-bg"><i class="fas fa-wallet"></i></div>
+            <div class="stat-info-customer"><h4>Total Paid</h4><p>Rs <?php echo number_format($total_payments_made, 2); ?></p></div>
+        </div>
+        <!-- NEW STAT CARD 3: Balance Due Orders -->
+        <div class="stat-card-customer">
+            <div class="stat-icon-customer red"><i class="fas fa-money-bill-wave"></i></div>
+            <!-- <div class="stat-info-customer"><h4>Balance Due Orders</h4><p><?php echo $balance_due_orders_count; ?></p></div> -->
+        </div>
     </div>
-    <div class="stat-card-customer">
-        <div class="stat-icon-customer yellow"><i class="fas fa-file-invoice"></i></div>
-        <div class="stat-info-customer"><h4>Pending Quotes</h4><p><?php echo $pending_quotes_total_count; ?></p></div>
-    </div>
-    <div class="stat-card-customer">
-        <div class="stat-icon-customer purple"><i class="fas fa-comments"></i></div>
-        <div class="stat-info-customer"><h4>Unread Messages</h4><p><?php echo $unread_messages_count; ?></p></div>
-    </div>
-    <!-- NEW STAT CARD 1: Completed Projects -->
-    <div class="stat-card-customer">
-        <div class="stat-icon-customer green"><i class="fas fa-check-circle"></i></div>
-        <div class="stat-info-customer"><h4>Completed Projects</h4><p><?php echo $completed_projects_count; ?></p></div>
-    </div>
-    <!-- NEW STAT CARD 2: Total Payments Made -->
-    <div class="stat-card-customer">
-        <div class="stat-icon-customer primary-color-bg"><i class="fas fa-wallet"></i></div>
-        <div class="stat-info-customer"><h4>Total Paid</h4><p>Rs <?php echo number_format($total_payments_made, 2); ?></p></div>
-    </div>
-</div>
 
-<div class="dashboard-section">
-    <h3>What would you like to do?</h3>
-    <div class="quick-access-grid">
-    <a href="request_quotation.php" class="access-card"><i class="fas fa-file-signature"></i><span>Request a New Quote</span></a>
-    <a href="../public/services.php" class="access-card"><i class="fas fa-search"></i><span>Search for Services</span></a>
-    <a href="../public/product.php" class="access-card"><i class="fas fa-shopping-cart"></i><span>Purchase Products</span></a>
-    <a href="my_profile.php" class="access-card"><i class="fas fa-user-edit"></i><span>Manage My Profile</span></a>
-    <a href="my_projects.php" class="access-card"><i class="fas fa-project-diagram"></i><span>My Projects & Quotes</span></a>
-    <a href="payment_history.php" class="access-card"><i class="fas fa-history"></i><span>Payment History</span></a>
+    <div class="dashboard-section">
+        <h3>What would you like to do?</h3>
+        <div class="quick-access-grid">
+            <a href="request_quotation.php" class="access-card"><i class="fas fa-file-signature"></i><span>Request a New Quote</span></a>
+            <a href="../public/services.php" class="access-card"><i class="fas fa-search"></i><span>Search for Services</span></a>
+            <a href="../public/product.php" class="access-card"><i class="fas fa-shopping-cart"></i><span>Purchase Products</span></a>
+            <a href="my_profile.php" class="access-card"><i class="fas fa-user-edit"></i><span>Manage My Profile</span></a>
+            <a href="my_projects.php" class="access-card"><i class="fas fa-project-diagram"></i><span>My Projects & Quotes</span></a>
+            <a href="payment_history.php" class="access-card"><i class="fas fa-history"></i><span>Payment History</span></a>
+            <a href="my_orders.php" class="access-card"><i class="fas fa-box"></i><span>My Orders</span></a> 
+        </div>
     </div>
-</div>
+
+    <div class="dashboard-section">
+        <h3>Orders Awaiting Balance Payment</h3>
+        <div class="content-card">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Order Date</th>
+                            <th>Advance Paid</th>
+                            <th>Balance Due</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($orders_awaiting_balance)): foreach ($orders_awaiting_balance as $order): ?>
+                        <tr>
+                            <td>#<?php echo htmlspecialchars($order['id']); ?></td>
+                            <td><?php echo htmlspecialchars(date('d M Y', strtotime($order['order_date']))); ?></td>
+                            <td>Rs. <?php echo htmlspecialchars(number_format($order['advance_amount'], 2)); ?></td>
+                            <td>Rs. <?php echo htmlspecialchars(number_format($order['balance_due'], 2)); ?></td>
+                            <td><span class="status-badge status-<?php echo htmlspecialchars(strtolower(str_replace('_', '-', $order['status']))); ?>"><?php echo htmlspecialchars(ucwords(str_replace('_', ' ', $order['status']))); ?></span></td>
+                            <td>
+                                <a href="pay_balance.php?order_id=<?php echo htmlspecialchars($order['id']); ?>" class="btn-view" style="background-color:#0d9488; color:white;">Pay Now</a>
+                                <a href="order_detail.php?id=<?php echo htmlspecialchars($order['id']); ?>" class="btn-view">Details</a>
+                            </td>
+                        </tr>
+                        <?php endforeach; else: ?>
+                            <tr><td colspan="6" style="text-align: center;">No orders currently awaiting balance payment.</td></tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <div class="dashboard-section">
         <h3>My Active Projects</h3>
@@ -253,5 +305,5 @@ $pending_quotes = $pending_quotes_query->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 </div>
-
+</main>
 <?php require_once '../includes/user_dashboard_footer.php'; ?>

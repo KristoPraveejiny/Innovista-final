@@ -1,29 +1,212 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Painting Section DOM Variables ---
+    // --- DOM Elements ---
+    const serviceNavItems = document.querySelectorAll('.service-nav .nav-item');
+    const categoryItems = document.querySelectorAll('.category-list .category-item');
+    const productSections = document.querySelectorAll('.product-section');
+    const categoryFilterBlock = document.getElementById('category-filter-block');
+
+    // These IDs are added to public/product.php's HTML for filtering
+    const interiorDesignGrid = document.getElementById('interior-design-grid'); 
     const paintingBrandGrid = document.getElementById('painting-brand-grid');
+    const paintingToolsGrid = document.getElementById('painting-tools-grid');
+    const restorationGrid = document.getElementById('restoration-grid'); // Added ID for restoration grid
+
     const paintingColorPanel = document.getElementById('painting-color-panel');
     const paintingColorGrid = document.getElementById('painting-color-grid');
     const colorPanelTitle = document.getElementById('color-panel-title');
     const backToBrandsBtn = document.getElementById('back-to-brands');
     const paintTypeSelect = document.getElementById('paintTypeSelect');
-    const paintTypeSheen = document.getElementById('paintTypeSheen');
+    const paintTypeSheen = document.getElementById('paintTypeSheen'); 
 
-    // --- Paint Type Selection (now only after brand is selected) ---
-    const paintTypeBlock = document.getElementById('paint-type-select-block');
-    if (paintTypeSelect && paintTypeBlock) {
-        paintTypeSelect.addEventListener('change', function() {
-            if (paintTypeSheen) {
-                paintTypeSheen.textContent = paintTypeSelect.value ? `Best type: ${paintTypeSelect.value}` : '';
-            }
-            // Show colors for selected brand and type
-            if (window._selectedBrandIdx !== undefined) {
-                showBrandColors(window._selectedBrandIdx, true);
-            }
+    const productModal = document.getElementById('productModal');
+    const modalOverlay = productModal ? productModal.querySelector('.modal-overlay') : null;
+    const modalCloseBtn = productModal ? productModal.querySelector('.modal-close-btn') : null;
+
+    const cartSidebar = document.getElementById('cartSidebar');
+    const cartCloseBtn = cartSidebar ? cartSidebar.querySelector('.cart-close-btn') : null;
+
+    // --- State Variables ---
+    let currentServiceType = 'interior-design'; // Default active service
+    let currentCategory = 'all'; // Default active category for interior design
+    let selectedPaintingBrandId = null;
+    let selectedPaintingBrandName = '';
+    
+    // --- User Login Status (from PHP data attribute on body) ---
+    const bodyElement = document.querySelector('body');
+    const isUserLoggedIn = bodyElement ? bodyElement.dataset.loggedIn === 'true' : false;
+
+    // --- Cart Management (Client-side) ---
+    let cartItems = {}; // Stores client-side representation of the cart
+
+    function updateCartUI() {
+        const cartItemsContainer = document.querySelector('#cartSidebar .cart-items');
+        const cartSubtotalEl = document.getElementById('cartSubtotal');
+        let subtotal = 0;
+        
+        cartItemsContainer.innerHTML = ''; // Clear existing items
+
+        if (Object.keys(cartItems).length === 0) {
+            cartItemsContainer.innerHTML = '<p class="cart-empty-message">Your cart is empty.</p>';
+            cartSubtotalEl.textContent = 'Rs. 0';
+            return;
+        }
+
+        for (const cartItemId in cartItems) {
+            const item = cartItems[cartItemId];
+            const itemTotal = item.price * item.quantity;
+            subtotal += itemTotal;
+
+            const cartItemEl = document.createElement('div');
+            cartItemEl.className = 'cart-item-entry'; // Add styling for this class in your CSS
+            cartItemEl.innerHTML = `
+                <img src="${item.image_path}" alt="${item.name}" class="cart-item-image">
+                <div class="cart-item-details">
+                    <h4>${item.name}</h4>
+                    ${item.color ? `<p>Color: <span style="display:inline-block; width:15px; height:15px; background:${item.color}; border:1px solid #ccc; vertical-align:middle; border-radius:3px;"></span> ${item.color}</p>` : ''}
+                    <div class="cart-item-qty-price">
+                        <input type="number" class="cart-item-qty-input" data-cart-item-id="${cartItemId}" value="${item.quantity}" min="1">
+                        <span>Rs. ${item.price.toFixed(2)} each</span>
+                        <button class="cart-item-remove-btn" data-cart-item-id="${cartItemId}"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+            cartItemsContainer.appendChild(cartItemEl);
+        }
+        cartSubtotalEl.textContent = `Rs. ${subtotal.toFixed(2)}`;
+
+        // Add event listeners for quantity change and remove button
+        cartItemsContainer.querySelectorAll('.cart-item-qty-input').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const cartItemId = e.target.dataset.cartItemId;
+                const newQuantity = parseInt(e.target.value);
+                if (newQuantity > 0) {
+                    const item = cartItems[cartItemId];
+                    addToCart(item.db_product_id, item.name, item.price, newQuantity, item.image_path, item.color, true, cartItemId);
+                } else {
+                    removeFromCart(cartItemId);
+                }
+            });
         });
-        // Hide paint type block initially
-        paintTypeBlock.style.display = 'none';
+
+        cartItemsContainer.querySelectorAll('.cart-item-remove-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const cartItemId = e.target.closest('button').dataset.cartItemId;
+                removeFromCart(cartItemId);
+            });
+        });
     }
-    // --- Painting Brands and Colors Data ---
+
+    // Function to fetch current cart state from backend
+    function fetchCart() {
+        if (!isUserLoggedIn) return;
+        fetch('../handlers/add_to_cart.php?action=get_cart') // Corrected path
+            .then(response => {
+                if (!response.ok) { throw new Error('Network response was not ok'); }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.cart) {
+                    cartItems = data.cart; // Update client-side cart
+                    updateCartUI();
+                } else {
+                    console.error('Failed to fetch cart:', data.message);
+                }
+            })
+            .catch(error => console.error('Network error fetching cart:', error));
+    }
+
+    // Function to add/update item in cart via AJAX
+    function addToCart(dbProductId, productName, productPrice, quantity, imagePath, color = '', isUpdate = false, cartItemId = null) {
+        if (!isUserLoggedIn) {
+            window.location.href = 'login.php';
+            return;
+        }
+        const formData = new FormData();
+        formData.append('action', 'add');
+        formData.append('product_id', dbProductId); 
+        formData.append('name', productName);
+        formData.append('price', productPrice);
+        formData.append('quantity', quantity);
+        formData.append('image_path', imagePath);
+        formData.append('color', color);
+        formData.append('is_update', isUpdate ? 'true' : 'false');
+        if (cartItemId) formData.append('cart_item_id', cartItemId);
+
+        // --- IMPORTANT: Include CSRF token here if implemented (HIGHLY RECOMMENDED) ---
+        // formData.append('csrf_token', 'YOUR_CSRF_TOKEN_FROM_PHP');
+
+        fetch('../handlers/add_to_cart.php', { // Corrected path
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) { throw new Error('Network response was not ok'); }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // alert(data.message); 
+                cartItems = data.cart; 
+                updateCartUI();
+                if (cartSidebar) cartSidebar.classList.add('active'); 
+            } else {
+                alert('Error adding to cart: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Network error adding to cart:', error);
+            alert('Could not add to cart. Please try again.');
+        });
+    }
+
+    // Function to remove item from cart via AJAX
+    function removeFromCart(cartItemId) {
+        if (!isUserLoggedIn) {
+            window.location.href = 'login.php';
+            return;
+        }
+        if (!confirm('Are you sure you want to remove this item from your cart?')) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('action', 'remove');
+        formData.append('cart_item_id', cartItemId); 
+
+        // --- IMPORTANT: Include CSRF token here if implemented ---
+        // formData.append('csrf_token', 'YOUR_CSRF_TOKEN_FROM_PHP');
+
+        fetch('../handlers/add_to_cart.php', { // Corrected path
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) { throw new Error('Network response was not ok'); }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // alert(data.message);
+                cartItems = data.cart;
+                updateCartUI();
+            } else {
+                alert('Error removing from cart: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Network error removing from cart:', error);
+            alert('Could not remove from cart. Please try again.');
+        });
+    }
+
+    // --- Hardcoded Painting Data (Matches your HTML) ---
+    // These will be used to generate color cards dynamically within the Painting section
     const standardColors = [
         { name: 'Royal Blue', hex: '#2a3eb1', price: 1200 },
         { name: 'Sunshine Yellow', hex: '#ffe066', price: 1150 },
@@ -38,68 +221,112 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Mint Green', hex: '#98ff98', price: 1180 },
         { name: 'Rose Pink', hex: '#ff66cc', price: 1220 }
     ];
-    const paintingBrands = [
-        {
-            name: 'Asian Paints',
-            logo: 'https://5.imimg.com/data5/SELLER/Default/2022/11/DQ/TC/MM/150810776/asian-paints-apex-ultima-weatherproof-exterior-emulsion-paint-1000x1000.png',
-            colors: standardColors
-        },
-        {
-            name: 'Nippon Paint',
-            logo: 'https://dkpo4ygqb6rh6.cloudfront.net/GLOBALPAINT_COM/imageresized/3543/1f394db21cee9ca1c626828b31db53cd/330_440_9_normalpng/finish_satin.png',
-            colors: standardColors
-        },
-        {
-            name: 'Dulux',
-            logo: 'https://www.britishpaints.in/media/images/product/thumbnail/all-rounder-primer-thumb-1617107592.jpg',
-            colors: standardColors
+    // --- End hardcoded painting data ---
+
+
+    // --- Rendering Functions ---
+    // This function filters and displays products based on current service type and category
+    function filterAndRenderProducts() {
+        // Hide all product sections first
+        productSections.forEach(section => section.classList.remove('active'));
+
+        if (currentServiceType === 'interior-design') {
+            document.getElementById('interior-design-section').classList.add('active');
+            categoryFilterBlock.style.display = 'block';
+
+            // Filter the products already present in HTML for Interior Design
+            const allInteriorProducts = document.querySelectorAll('#interior-design-grid .product-item');
+            allInteriorProducts.forEach(product => {
+                const productCategory = product.dataset.category;
+                if (currentCategory === 'all' || productCategory === currentCategory) {
+                    product.style.display = 'block';
+                } else {
+                    product.style.display = 'none';
+                }
+            });
+
+        } else if (currentServiceType === 'painting') {
+            document.getElementById('painting-section').classList.add('active');
+            categoryFilterBlock.style.display = 'none'; // Painting has its own brand/color filters
+            renderPaintingBrandsGrid(); // Show painting brands first
+            if (paintingToolsGrid) paintingToolsGrid.style.display = 'grid'; // Ensure tools grid is visible
+        } else if (currentServiceType === 'restoration') {
+            document.getElementById('restoration-section').classList.add('active');
+            categoryFilterBlock.style.display = 'block';
+
+            // Filter the products already present in HTML for Restoration
+            const allRestorationProducts = document.querySelectorAll('#restoration-grid .product-item');
+            allRestorationProducts.forEach(product => {
+                const productCategory = product.dataset.category;
+                if (currentCategory === 'all' || productCategory === currentCategory) {
+                    product.style.display = 'block';
+                } else {
+                    product.style.display = 'none';
+                }
+            });
         }
-    ];
+    }
 
-    // --- Painting Section Interactivity ---
-    // (Removed duplicate DOM variable declarations above)
 
-    function renderPaintingBrands() {
-        paintingBrandGrid.innerHTML = '';
-        paintingBrands.forEach((brand, idx) => {
+    function renderPaintingBrandsGrid() {
+        if (!paintingBrandGrid) return;
+        paintingBrandGrid.innerHTML = ''; // Clear any loading spinners
+
+        if (hardcodedPaintingBrands.length === 0) {
+            paintingBrandGrid.innerHTML = '<p class="text-center">No painting brands found.</p>';
+            return;
+        }
+        hardcodedPaintingBrands.forEach((brand) => {
             const card = document.createElement('div');
             card.className = 'brand-card';
+            card.setAttribute('data-brand-id', brand.id);
+            card.setAttribute('data-brand-name', brand.name);
             card.innerHTML = `
-                <img src="${brand.logo}" alt="${brand.name}" class="brand-logo" />
+                <img src="${brand.image_path_full}" alt="${brand.name}" class="brand-logo" />
                 <div class="brand-title">${brand.name}</div>
             `;
             card.addEventListener('click', () => {
-                window._selectedBrandIdx = idx;
-                // Show paint type dropdown, hide colors
+                selectedPaintingBrandId = brand.id;
+                selectedPaintingBrandName = brand.name;
+                
                 paintingBrandGrid.style.display = 'none';
                 paintingColorPanel.style.display = 'block';
-                if (paintTypeBlock) {
-                    paintTypeBlock.style.display = 'block';
-                    paintTypeSelect.selectedIndex = 0;
-                    paintTypeSheen.textContent = '';
+                if (document.getElementById('paint-type-select-block')) { // Ensure element exists
+                     document.getElementById('paint-type-select-block').style.display = 'block';
+                     paintTypeSelect.selectedIndex = 0; // Reset paint type selection
+                     if (paintTypeSheen) paintTypeSheen.textContent = '';
                 }
-                colorPanelTitle.textContent = `${brand.name} - Available Colors`;
-                paintingColorGrid.innerHTML = '';
+                colorPanelTitle.textContent = `${brand.name} - Select Type & Color`;
+                paintingColorGrid.innerHTML = ''; // Clear colors until type is selected
+                
+                // If a type is already selected (e.g., user navigated back), show colors
+                if (paintTypeSelect && paintTypeSelect.value) {
+                    showBrandColors(selectedPaintingBrandId, selectedPaintingBrandName, paintTypeSelect.value);
+                }
             });
             paintingBrandGrid.appendChild(card);
         });
         paintingBrandGrid.style.display = 'grid';
         paintingColorPanel.style.display = 'none';
-        if (paintTypeBlock) paintTypeBlock.style.display = 'none';
+        if (document.getElementById('paint-type-select-block')) document.getElementById('paint-type-select-block').style.display = 'none';
     }
 
-    function showBrandColors(brandIdx, forceShow) {
-        // Only show colors if paint type is selected
-        if (!forceShow && (!paintTypeSelect || !paintTypeSelect.value)) {
-            paintingColorGrid.innerHTML = '';
-            return;
-        }
-        const brand = paintingBrands[brandIdx];
-        colorPanelTitle.textContent = `${brand.name} - Available Colors`;
+    function showBrandColors(brandId, brandName, paintType) {
+        if (!paintingColorGrid) return;
+
         paintingColorGrid.innerHTML = '';
-        brand.colors.forEach(color => {
+        colorPanelTitle.textContent = `${brandName} - ${paintType} Colors`;
+
+        standardColors.forEach(color => {
             const colorCard = document.createElement('div');
             colorCard.className = 'color-card';
+            const dynamicProductId = `paint-${brandId}-${color.hex.replace('#','')}-${paintType.replace(/\s/g,'')}`;
+            colorCard.setAttribute('data-product-id', dynamicProductId); 
+            colorCard.setAttribute('data-product-name', `${brandName} ${color.name} ${paintType} Paint`);
+            colorCard.setAttribute('data-product-price', color.price);
+            colorCard.setAttribute('data-image-path', 'assets/images/placeholder-paint.jpg'); // Placeholder image for paint
+            colorCard.setAttribute('data-color', color.hex);
+
             colorCard.innerHTML = `
                 <div class="color-swatch" style="background:${color.hex}"></div>
                 <div class="color-info">
@@ -119,17 +346,21 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             paintingColorGrid.appendChild(colorCard);
         });
+
         // Add custom color option
         const customCard = document.createElement('div');
         customCard.className = 'color-card';
+        customCard.setAttribute('data-product-id', `paint-${brandId}-custom`); 
+        customCard.setAttribute('data-image-path', 'assets/images/placeholder-paint.jpg'); 
+        
         customCard.innerHTML = `
-            <div class="color-swatch" style="background:linear-gradient(135deg,#fff,#eee,#ccc,#000,#f00,#0f0,#00f,#ff0,#0ff,#f0f,#fa0,#0af)"></div>
+            <div class="color-swatch" style="background:linear-gradient(135deg, #fff, #eee, #ccc, #000, #f00,#0f0,#00f,#ff0,#0ff,#f0f,#fa0,#0af)"></div>
             <div class="color-info custom-color-info" style="display:flex;flex-direction:column;gap:0.5rem;align-items:flex-start;">
                 <div class="custom-color-label">Custom Color</div>
                 <input type="color" class="custom-color-picker" value="#ffffff" style="width:40px;height:40px;">
-                <input type="text" class="custom-color-hex" value="#ffffff" readonly>
-                <input type="text" class="custom-color-name" placeholder="Color Name" readonly>
-                <input type="number" class="custom-color-price" placeholder="Price/L" min="1" readonly>
+                <input type="text" class="custom-color-hex" value="#FFFFFF" readonly>
+                <input type="text" class="custom-color-name" placeholder="Custom Color Name" value="Custom White" readonly>
+                <input type="number" class="custom-color-price" placeholder="Price/L" min="1" value="1100" readonly>
                 <div style="display:flex;align-items:center;gap:8px;">
                     <label>Liters:</label>
                     <select class="color-liters-select">
@@ -143,151 +374,260 @@ document.addEventListener('DOMContentLoaded', () => {
             <button class="btn-add-cart painting-purchase-btn" title="Add to Cart"><i class="fas fa-shopping-cart"></i></button>
         `;
         paintingColorGrid.appendChild(customCard);
-        // Auto-generate price based on color value
+        
+        // Custom color logic
         const colorInput = customCard.querySelector('.custom-color-picker');
         const priceInput = customCard.querySelector('.custom-color-price');
+        const nameInput = customCard.querySelector('.custom-color-name');
+        const hexInput = customCard.querySelector('.custom-color-hex');
+        const litersSelect = customCard.querySelector('.color-liters-select');
+        const customAddToCartBtn = customCard.querySelector('.btn-add-cart');
+
         function autoPrice(hex) {
             let sum = 0;
             for (let i = 0; i < hex.length; i++) sum += hex.charCodeAt(i);
-            return 1000 + (sum % 501); // 1000-1500
+            return 1000 + (sum % 501); // Price range 1000-1500
         }
         function autoColorName(hex) {
-            // Simple mapping for demo: use hex as name, or map to a basic color
             const colorNames = {
                 '#ffffff': 'White', '#000000': 'Black', '#ff0000': 'Red', '#00ff00': 'Green', '#0000ff': 'Blue',
                 '#ffff00': 'Yellow', '#00ffff': 'Cyan', '#ff00ff': 'Magenta', '#b57edc': 'Lavender', '#98ff98': 'Mint', '#ff66cc': 'Rose',
                 '#ffe066': 'Sunshine', '#2a3eb1': 'Royal Blue', '#50c878': 'Emerald', '#ff6f61': 'Coral', '#0077be': 'Ocean', '#ffdab9': 'Peach', '#36454f': 'Charcoal'
             };
-            return colorNames[hex.toLowerCase()] || hex.toUpperCase();
+            const currentPaintType = paintTypeSelect ? paintTypeSelect.value : '';
+            return (colorNames[hex.toLowerCase()] || 'Custom ' + hex.toUpperCase()) + (currentPaintType ? ` ${currentPaintType} Paint` : ' Paint');
         }
         function updateCustomFields() {
-            priceInput.value = autoPrice(colorInput.value);
-            nameInput.value = autoColorName(colorInput.value);
-            hexInput.value = colorInput.value.toUpperCase();
+            const currentHex = colorInput.value;
+            priceInput.value = autoPrice(currentHex);
+            nameInput.value = autoColorName(currentHex); 
+            hexInput.value = currentHex.toUpperCase();
+
+            const paintTypeSuffix = paintTypeSelect ? paintTypeSelect.value.replace(/\s/g,'') : '';
+            customAddToCartBtn.dataset.productId = `paint-${brandId}-custom-${currentHex.replace('#','')}-${paintTypeSuffix}`; // More specific ID
+            customAddToCartBtn.dataset.productName = nameInput.value;
+            customAddToCartBtn.dataset.productPrice = priceInput.value;
+            customAddToCartBtn.dataset.color = currentHex;
+            customAddToCartBtn.dataset.quantity = litersSelect.value;
         }
-        const nameInput = customCard.querySelector('.custom-color-name');
-        const hexInput = customCard.querySelector('.custom-color-hex');
         colorInput.addEventListener('input', updateCustomFields);
-        // Set initial values
-        updateCustomFields();
-    }
-
-    if (paintingBrandGrid && paintingColorPanel) {
-        // Show brands when painting section is activated
-        document.querySelectorAll('.service-nav .nav-item').forEach(item => {
-            item.addEventListener('click', e => {
-                if (item.dataset.service === 'painting') {
-                    paintingBrandGrid.style.display = 'grid';
-                    renderPaintingBrands();
-                }
-            });
-        });
-        // Back to brands
-        backToBrandsBtn.addEventListener('click', renderPaintingBrands);
-        // Initial render if painting is default
-        if (document.querySelector('.service-nav .nav-item.active')?.dataset.service === 'painting') {
-            paintingBrandGrid.style.display = 'grid';
-            renderPaintingBrands();
+        litersSelect.addEventListener('change', updateCustomFields); 
+        if (paintTypeSelect) {
+            paintTypeSelect.addEventListener('change', updateCustomFields);
         }
+        updateCustomFields(); // Set initial values
     }
-    // --- Determine if user is logged in (from a data attribute set by PHP) ---
-    // First, check if the body element exists before trying to access its dataset
-    const bodyElement = document.querySelector('body');
-    const isUserLoggedIn = bodyElement ? bodyElement.dataset.loggedIn === 'true' : false;
 
-    // --- Sidebar Filtering ---
-    const serviceNavItems = document.querySelectorAll('.service-nav .nav-item');
-    const categoryItems = document.querySelectorAll('.category-list .category-item');
-    const productSections = document.querySelectorAll('.product-section');
-    const allProducts = document.querySelectorAll('.product-item');
-    const categoryFilterBlock = document.getElementById('category-filter-block');
-
+    // --- Main Event Listeners ---
+    // Service Type Navigation (Left Sidebar)
     serviceNavItems.forEach(item => {
         item.addEventListener('click', e => {
             e.preventDefault();
             const service = item.dataset.service;
+            currentServiceType = service;
             
             serviceNavItems.forEach(i => i.classList.remove('active'));
             item.classList.add('active');
 
-            productSections.forEach(section => {
-                section.id === `${service}-section` ? section.classList.add('active') : section.classList.remove('active');
-            });
+            // Hide all product sections, then activate the current one
+            productSections.forEach(section => section.classList.remove('active'));
+            document.getElementById(`${service}-section`).classList.add('active');
 
             // Show/hide category filter block
-            if (service === 'interior-design') {
+            if (service === 'interior-design' || service === 'restoration') { 
                 categoryFilterBlock.style.display = 'block';
-            } else {
+                currentCategory = document.querySelector('.category-list .category-item.active')?.dataset.category || 'all';
+                filterAndRenderProducts(); // Call rendering for these sections
+            } else { // Painting has its own brand/color logic
                 categoryFilterBlock.style.display = 'none';
+                renderPaintingBrandsGrid();
+                // Painting tools are already in HTML, just ensure they are part of the active section
+                if (paintingToolsGrid) paintingToolsGrid.style.display = 'grid'; // Ensure tools grid is visible
             }
         });
     });
 
+    // Category Filter Items (for Interior Design / Restoration)
     categoryItems.forEach(item => {
         item.addEventListener('click', e => {
             e.preventDefault();
-            const category = item.dataset.category;
+            currentCategory = item.dataset.category;
             
             categoryItems.forEach(i => i.classList.remove('active'));
             item.classList.add('active');
 
-            allProducts.forEach(product => {
-                const productBelongsToInterior = product.closest('#interior-design-section');
-                if (productBelongsToInterior) {
-                    if (category === 'all' || product.dataset.category === category) {
-                        product.style.display = 'block';
-                    } else {
-                        product.style.display = 'none';
-                    }
-                }
-            });
+            filterAndRenderProducts(); // Re-filter current section
         });
     });
 
-    // --- Product Modal Functionality ---
-    const productModal = document.getElementById('productModal');
-    if (productModal) {
-        const modalOverlay = productModal.querySelector('.modal-overlay');
-        const modalCloseBtn = productModal.querySelector('.modal-close-btn');
+    // Back to Brands button (in Painting section)
+    if (backToBrandsBtn) {
+        backToBrandsBtn.addEventListener('click', () => {
+            renderPaintingBrandsGrid();
+            paintingColorPanel.style.display = 'none';
+            if (document.getElementById('paint-type-select-block')) document.getElementById('paint-type-select-block').style.display = 'none';
+            selectedPaintingBrandId = null;
+            selectedPaintingBrandName = '';
+        });
+    }
 
-        document.querySelectorAll('.product-image').forEach(image => {
-            image.addEventListener('click', () => {
+    // Paint Type Selection listener
+    if (paintTypeSelect) {
+        paintTypeSelect.addEventListener('change', function() {
+            const selectedPaintType = paintTypeSelect.value;
+            if (paintTypeSheen) {
+                paintTypeSheen.textContent = selectedPaintType ? `Paint Type Selected: ${selectedPaintType}` : '';
+            }
+            if (selectedPaintingBrandId && selectedPaintType) {
+                showBrandColors(selectedPaintingBrandId, selectedPaintingBrandName, selectedPaintType);
+            } else {
+                paintingColorGrid.innerHTML = ''; // Clear if no brand/type selected
+            }
+        });
+    }
+
+    // --- Product Modal Functionality ---
+    if (productModal) {
+        document.body.addEventListener('click', (e) => { // Use event delegation
+            const productImageTrigger = e.target.closest('.product-item .product-image');
+            if (productImageTrigger) {
                 if (!isUserLoggedIn) {
-                    window.location.href = 'login.php'; // Redirect if not logged in
+                    window.location.href = 'login.php';
                     return;
                 }
-                const productItem = image.closest('.product-item');
-                document.getElementById('modalImage').src = productItem.querySelector('img').src;
-                document.getElementById('modalBrand').textContent = productItem.querySelector('.brand-name').textContent;
-                document.getElementById('modalTitle').textContent = productItem.querySelector('h4').textContent;
-                document.getElementById('modalPrice').textContent = productItem.querySelector('.price').textContent;
+                const productItem = productImageTrigger.closest('.product-item');
+                // Extract data from the product item's dataset
+                const productId = productItem.dataset.productId;
+                const productName = productItem.querySelector('h4').textContent;
+                const productBrand = productItem.querySelector('.brand-name').textContent;
+                const productPrice = parseFloat(productItem.querySelector('.price').textContent.replace('Rs.', '').replace(',', '').trim());
+                const productImage = productItem.querySelector('img').src;
+                const productDescription = productItem.dataset.productDescription || 'No description available.'; // Get from data attribute
+                
+                // Get color options from the button's data attribute
+                const addToCartButton = productItem.querySelector('.btn-add-cart');
+                const productColorOptions = JSON.parse(addToCartButton.dataset.colorOptions || '[]');
+
+
+                document.getElementById('modalImage').src = productImage;
+                document.getElementById('modalBrand').textContent = productBrand;
+                document.getElementById('modalTitle').textContent = productName;
+                document.getElementById('modalTitle').dataset.productId = productId; // Set ID here
+                document.getElementById('modalPrice').textContent = `Rs. ${productPrice.toLocaleString('en-IN')}`;
+                document.getElementById('modalDescription').textContent = productDescription;
+
+                // Populate color options dropdown
+                const modalColorSelect = document.getElementById('modalColor');
+                modalColorSelect.innerHTML = ''; // Clear previous options
+                if (productColorOptions.length > 0) {
+                    modalColorSelect.closest('.form-group').style.display = 'block';
+                    productColorOptions.forEach(colorHex => {
+                        const option = document.createElement('option');
+                        option.value = colorHex;
+                        option.textContent = colorHex; // Or a color name if you map hex to name
+                        option.style.backgroundColor = colorHex;
+                        option.style.color = getTextColorForBackground(colorHex);
+                        modalColorSelect.appendChild(option);
+                    });
+                } else {
+                    modalColorSelect.closest('.form-group').style.display = 'none'; // Hide if no color options
+                }
+                document.getElementById('modalQuantity').value = 1; // Reset quantity
                 productModal.classList.add('active');
-            });
+            }
         });
 
         const closeModal = () => productModal.classList.remove('active');
-        modalOverlay.addEventListener('click', closeModal);
-        modalCloseBtn.addEventListener('click', closeModal);
+        if(modalOverlay) modalOverlay.addEventListener('click', closeModal);
+        if(modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
+
+        // Helper to determine text color for background (for modal color options)
+        function getTextColorForBackground(hexcolor) {
+            const r = parseInt(hexcolor.substr(1, 2), 16);
+            const g = parseInt(hexcolor.substr(3, 2), 16);
+            const b = parseInt(hexcolor.substr(5, 2), 16);
+            const y = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            return (y >= 128) ? 'black' : 'white';
+        }
     }
 
-    // --- Cart Functionality ---
-    const cartSidebar = document.getElementById('cartSidebar');
+    // --- Cart Sidebar Functionality ---
     if(cartSidebar){
-        const cartCloseBtn = cartSidebar.querySelector('.cart-close-btn');
-    
-        document.body.addEventListener('click', function(e) {
-            const button = e.target.closest('.btn-add-cart, .btn-add-cart-modal');
-            if (button) {
-                e.preventDefault();
-                if (!isUserLoggedIn) {
-                    window.location.href = 'login.php'; // Redirect if not logged in
-                    return;
-                }
-                alert('Product added to cart! (Functionality to be built)');
-                cartSidebar.classList.add('active');
-            }
-        });
-        
-        cartCloseBtn.addEventListener('click', () => cartSidebar.classList.remove('active'));
+        if(cartCloseBtn) cartCloseBtn.addEventListener('click', () => cartSidebar.classList.remove('active'));
     }
+
+    // --- Add to Cart Event Listener (Delegated) ---
+    document.body.addEventListener('click', function(e) {
+        const addButton = e.target.closest('.btn-add-cart, .btn-add-cart-modal, .painting-purchase-btn');
+        if (addButton) {
+            e.preventDefault();
+
+            if (!isUserLoggedIn) {
+                window.location.href = 'login.php';
+                return;
+            }
+
+            let dbProductId, productName, productPrice, imagePath, color = '', quantity = 1;
+
+            // Common attributes are expected on the button itself or a closest product-item
+            dbProductId = addButton.dataset.productId;
+            productName = addButton.dataset.productName;
+            productPrice = parseFloat(addButton.dataset.productPrice);
+            imagePath = addButton.dataset.imagePath; // Full path
+            
+            // Quantity and Color from modal or painting section
+            if (addButton.closest('#productModal')) { // From product modal
+                quantity = parseInt(document.getElementById('modalQuantity').value);
+                color = document.getElementById('modalColor').value;
+            } else if (addButton.closest('.color-card')) { // From painting color grid
+                quantity = parseInt(addButton.closest('.color-card').querySelector('.color-liters-select').value);
+                // Get color for painting items (standard or custom)
+                if (addButton.closest('.custom-color-info')) { // Custom color
+                    color = addButton.closest('.custom-color-info').querySelector('.custom-color-picker').value;
+                } else { // Standard color swatch
+                    const swatch = addButton.closest('.color-card').querySelector('.color-swatch');
+                    color = window.getComputedStyle(swatch).backgroundColor; // Get computed RGB, or hex if set directly
+                    color = rgbToHex(color); // Convert to HEX for consistency
+                }
+            } else { // From general product grid items (default quantity 1, no color unless set on button)
+                 color = addButton.dataset.color || ''; // If product card button has a default color
+            }
+
+            if (dbProductId && productName && !isNaN(productPrice) && !isNaN(quantity) && quantity > 0) {
+                addToCart(dbProductId, productName, productPrice, quantity, imagePath, color);
+                if (productModal && productModal.classList.contains('active')) {
+                    productModal.classList.remove('active'); // Close modal after adding
+                }
+            } else {
+                alert('Could not get complete product information or quantity is invalid.');
+            }
+        }
+    });
+
+    // Helper to convert RGB to Hex (for painting colors)
+    function rgbToHex(rgb) {
+        if (!rgb || !rgb.startsWith('rgb')) return rgb;
+        const parts = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+        if (!parts) return rgb;
+        function hex(x) {
+            return ("0" + parseInt(x).toString(16)).slice(-2);
+        }
+        return "#" + hex(parts[1]) + hex(parts[2]) + hex(parts[3]);
+    }
+
+
+    // --- Initial Load Logic ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Fetch cart contents on page load
+        fetchCart();
+
+        // Render initial active service section based on `data-service="interior-design"` tab
+        const initialServiceTab = document.querySelector('.service-nav .nav-item.active');
+        if (initialServiceTab) {
+            currentServiceType = initialServiceTab.dataset.service;
+            currentCategory = document.querySelector('.category-list .category-item.active')?.dataset.category || 'all';
+            filterAndRenderProducts(); // Initialize filtering and display
+        }
+    });
+
 });

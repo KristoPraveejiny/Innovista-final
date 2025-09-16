@@ -34,7 +34,7 @@ $loggedInUserName = htmlspecialchars($_SESSION['user_name'] ?? 'Customer'); // F
 $currentPage = basename($_SERVER['SCRIPT_NAME']); // e.g., 'customer_dashboard.php'
 
 // Get user's profile image path for the header (assuming getImageSrc is in session.php)
-$profile_image_path = getImageSrc($_SESSION['profile_image_path'] ?? 'assets/images/default-avatar.jpg');
+// $profile_image_path = getImageSrc($_SESSION['profile_image_path'] ?? 'assets/images/default-avatar.jpg');
 // You need to ensure $_SESSION['profile_image_path'] is set during login for this.
 // If not, fetch it here:
 if (!isset($_SESSION['profile_image_path'])) {
@@ -50,7 +50,7 @@ if (!isset($_SESSION['profile_image_path'])) {
     $profile_img_row = $stmt_profile->fetch(PDO::FETCH_ASSOC);
     if ($profile_img_row && $profile_img_row['profile_image_path']) {
         $_SESSION['profile_image_path'] = $profile_img_row['profile_image_path'];
-        $profile_image_path = getImageSrc($profile_img_row['profile_image_path']);
+        // $profile_image_path = getImageSrc($profile_img_row['profile_image_path']);
     }
 }
 
@@ -61,9 +61,11 @@ $navLinks = [
     ['href' => 'request_quotation.php', 'icon' => 'fas fa-file-signature', 'text' => 'New Quote'],
     ['href' => 'my_projects.php', 'icon' => 'fas fa-tasks', 'text' => 'My Projects'],
     ['href' => 'payment_history.php', 'icon' => 'fas fa-receipt', 'text' => 'Payments'],
+    ['href' => 'my_orders.php', 'icon' => 'fas fa-box', 'text' => 'My Orders'], // updated icon
     ['href' => 'my_profile.php', 'icon' => 'fas fa-user-edit', 'text' => 'My Profile'],
     // Add more customer-specific links here
 ];
+
 
 ?>
 <!DOCTYPE html>
