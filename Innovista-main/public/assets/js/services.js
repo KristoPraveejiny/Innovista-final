@@ -67,6 +67,18 @@ document.addEventListener('DOMContentLoaded', function() {
     quotePreviewForm.addEventListener('submit', function(e) {
         console.log('Submitting quotation request...');
         e.preventDefault();
+        
+        // Prevent double submission
+        const submitBtn = quotePreviewForm.querySelector('button[type="submit"]');
+        if (submitBtn.disabled) {
+            return; // Already submitting, ignore
+        }
+        
+        // Disable submit button and show loading state
+        submitBtn.disabled = true;
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Submitting...';
+        
         const projectDescription = previewProjectDescription.value;
         // Prepare form data
         const formData = new FormData();
@@ -98,6 +110,11 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(() => {
             closeQuoteModal();
             alert('Could not send request. Please try again.');
+        })
+        .finally(() => {
+            // Re-enable submit button
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
         });
     });
 

@@ -61,6 +61,17 @@ try {
         throw new Exception('Selected provider is invalid.');
     }
 
+    // Check for duplicate requests within the last 30 seconds (rate limiting)
+    $stmt = $db->prepare('SELECT id FROM quotations WHERE customer_id = :customer_id AND provider_id = :provider_id AND project_description = :project_description AND created_at > DATE_SUB(NOW(), INTERVAL 30 SECOND)');
+    $stmt->execute([
+        ':customer_id' => $customer_id,
+        ':provider_id' => $provider_id,
+        ':project_description' => $project_description
+    ]);
+    if ($stmt->fetch()) {
+        throw new Exception('Duplicate request detected. Please wait a moment before submitting again.');
+    }
+
     // Begin transaction
     $db->beginTransaction();
 

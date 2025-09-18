@@ -7,7 +7,7 @@
 
 // Check if user is logged in by checking session directly
 if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
-    echo "<!-- User not logged in -->";
+    // echo "<!-- User not logged in -->";
     return;
 }
 
@@ -39,7 +39,7 @@ try {
     $notifications = [];
 }
 
-echo "<!-- Working bell loaded for user: " . $userId . " -->";
+// echo "<!-- Working bell loaded for user: " . $userId . " -->";
 ?>
 
 <!-- Working Notification Bell -->
