@@ -5,6 +5,23 @@ require_once '../public/session.php'; // For session_start() and helper function
 require_once '../handlers/flash_message.php'; // For setting flash messages
 require_once '../config/Database.php';
 
+// --- PHPMailer Autoload ---
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
+require_once '../vendor/phpmailer/phpmailer/src/Exception.php';
+require_once '../vendor/phpmailer/phpmailer/src/PHPMailer.php';
+require_once '../vendor/phpmailer/phpmailer/src/SMTP.php';
+
+// --- SMTP Configuration ---
+define('SMTP_HOST', 'smtp.gmail.com');
+define('SMTP_USERNAME', 'jathushan006@gmail.com');
+define('SMTP_PASSWORD', 'qhaqwgaovdnvjzkm');
+define('SMTP_PORT', 587);
+define('SMTP_ENCRYPTION', 'tls');
+define('SENDER_NAME', 'Innovista Support');
+
 header('Content-Type: application/json'); // This handler will respond with JSON
 
 // Check if user is logged in
@@ -26,6 +43,43 @@ function sendJsonResponse(bool $success, string $message, array $data = []): voi
     exit();
 }
 
+// Helper to send OTP email
+function sendOtpEmail(string $recipientEmail, string $otpCode, string $transactionId): bool {
+    $mail = new PHPMailer(true);
+    try {
+        $mail->SMTPDebug = 0;
+        $mail->isSMTP();
+        $mail->Host       = SMTP_HOST;
+        $mail->SMTPAuth   = true;
+        $mail->Username   = SMTP_USERNAME;
+        $mail->Password   = SMTP_PASSWORD;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = SMTP_PORT;
+
+        $mail->setFrom(SMTP_USERNAME, SENDER_NAME);
+        $mail->addAddress($recipientEmail);
+
+        $mail->isHTML(true);
+        $mail->Subject = 'Innovista: Your One-Time Password (OTP) for Booking';
+        $mail->Body    = "
+            <p>Dear Customer,</p>
+            <p>To confirm your booking with Innovista, please use the following One-Time Password (OTP):</p>
+            <h3 style='font-size: 24px; color: #0d9488;'>OTP: <strong>{$otpCode}</strong></h3>
+            <p>This OTP is valid for 5 minutes.</p>
+            <p>Your booking transaction ID is: <strong>{$transactionId}</strong></p>
+            <p>If you did not initiate this booking, please ignore this email.</p>
+            <p>Best regards,<br>Innovista Team</p>
+        ";
+        $mail->AltBody = "Innovista: Your One-Time Password (OTP) for Booking\n\nOTP: {$otpCode}\n\nThis OTP is valid for 5 minutes.\nYour booking transaction ID is: {$transactionId}\n\nIf you did not initiate this booking, please ignore this email.\nBest regards,\nInnovista Team";
+
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        error_log("Booking OTP Email could not be sent. Mailer Error: {$mail->ErrorInfo}");
+        return false;
+    }
+}
+
 try {
     $conn->beginTransaction(); // Start transaction
 
@@ -39,13 +93,22 @@ try {
             sendJsonResponse(false, 'Missing OTP or transaction details.');
         }
         
-        // --- IMPORTANT: Real OTP Verification ---
-        // In a real system, you would:
-        // 1. Fetch the OTP associated with this transaction_id from a temporary table/session.
-        // 2. Verify it has not expired.
-        // 3. Compare the submitted OTP with the stored one.
-        // For this example, we'll just simulate success if OTP is '123456'.
-        if ($otp === '123456') { // SIMULATION: Replace with actual OTP verification logic
+        // --- Real OTP Verification ---
+        // 1. Fetch the OTP associated with this transaction_id from session
+        // 2. Verify it has not expired
+        // 3. Compare the submitted OTP with the stored one
+        $pending_otp_data = $_SESSION['pending_otp_transaction'] ?? null;
+        
+        if (!$pending_otp_data || $pending_otp_data['transaction_id'] !== $transaction_id || $pending_otp_data['quotation_id'] != $quotation_id) {
+            sendJsonResponse(false, 'No matching pending transaction found or transaction expired. Please restart your payment.');
+        }
+        
+        if (time() > $pending_otp_data['expires_at']) {
+            unset($_SESSION['pending_otp_transaction']);
+            sendJsonResponse(false, 'OTP has expired. Please resend or restart your payment.');
+        }
+        
+        if ($otp === $pending_otp_data['otp_code']) { // Real OTP verification
             // OTP is correct, finalize booking
             $stmt_update_cq = $conn->prepare("UPDATE custom_quotations SET status = 'approved' WHERE id = :id AND customer_id = :customer_id");
             $stmt_update_cq->bindParam(':id', $quotation_id, PDO::PARAM_INT);
@@ -69,6 +132,7 @@ try {
                 $stmt_create_project->execute();
             }
 
+            unset($_SESSION['pending_otp_transaction']); // Clear OTP data after successful verification
             $conn->commit();
             sendJsonResponse(true, 'OTP verified and booking confirmed successfully!');
         } else {
@@ -131,14 +195,26 @@ try {
                 // SIMULATION: Store transaction_id and OTP (e.g., in session or a temporary DB table)
                 // for later verification. For simplicity here, we'll assume it's just passed to frontend.
                 // In a real app, you'd trigger an SMS OTP here.
+                // Generate real OTP
+                $otp_code = str_pad(mt_rand(100000, 999999), 6, '0', STR_PAD_LEFT);
+                
                 $_SESSION['pending_otp_transaction'] = [
                     'transaction_id' => $simulated_transaction_id,
                     'quotation_id' => $quotation_id,
-                    'otp_code' => '123456', // SIMULATION: this would be randomly generated
+                    'otp_code' => $otp_code, // Real randomly generated OTP
                     'expires_at' => time() + 300 // 5 minutes
                 ];
+                
+                // Send OTP email
+                $customer_email = $_POST['customerEmail'] ?? '';
+                if (!empty($customer_email) && !sendOtpEmail($customer_email, $otp_code, $simulated_transaction_id)) {
+                    error_log("Failed to send booking OTP email to " . $customer_email);
+                    $conn->rollBack();
+                    sendJsonResponse(false, "Failed to send OTP email. Please try again.");
+                }
+                
                 $conn->commit();
-                sendJsonResponse(true, 'Payment initiated. Please enter OTP to confirm.', ['requires_otp' => true, 'transaction_id' => $simulated_transaction_id]);
+                sendJsonResponse(true, 'Payment initiated. OTP sent to your email. Please enter OTP to confirm.', ['requires_otp' => true, 'transaction_id' => $simulated_transaction_id]);
             } else {
                 // If no OTP, directly finalize booking
                 $stmt_update_cq = $conn->prepare("UPDATE custom_quotations SET status = 'approved' WHERE id = :id AND customer_id = :customer_id");

@@ -1,8 +1,8 @@
 <?php
 class Database {
     private $host = '127.0.0.1';  
-    private $port = '3308';          
-    private $db_name = 'inno';
+    private $port = '3306';          
+    private $db_name = 'innovista';
     private $username = 'root';
     private $password = '';
     private $conn;

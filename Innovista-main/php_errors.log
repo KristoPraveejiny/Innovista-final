@@ -1,0 +1,203 @@
+[18-Sep-2025 11:16:39 Europe/Berlin] OTP Verification Debug - OTP entered: 671923
+[18-Sep-2025 11:16:39 Europe/Berlin] OTP Verification Debug - Transaction ID: TRX-order_68cbcdde8ed6d
+[18-Sep-2025 11:16:39 Europe/Berlin] OTP Verification Debug - Session data: Array
+(
+    [transaction_id] => TRX-order_68cbcdde8ed6d
+    [order_data] => Array
+        (
+            [user_id] => 27
+            [total_amount] => 34000
+            [advance_amount] => 34000
+            [balance_due] => 0
+            [shipping_name] => Jathu
+            [shipping_address] => jaffna
+            [shipping_city] => jappan
+            [shipping_zip] => 45698
+            [shipping_phone] => 4253674433
+            [shipping_email] => jathushan006@gmail.com
+            [billing_name] => Jathu
+            [billing_address] => jaffna
+            [billing_city] => jappan
+            [billing_zip] => 45698
+            [payment_method] => card
+            [payment_terms] => full
+            [transaction_id] => TRX-order_68cbcdde8ed6d
+        )
+
+    [cart_items] => Array
+        (
+            [2] => Array
+                (
+                    [db_product_id] => 2
+                    [id] => 2
+                    [name] => Modern Table Lamp
+                    [price] => 8500
+                    [quantity] => 4
+                    [image_path] => assets/images/modern-table-lamp.jpg
+                    [color] => 
+                )
+
+        )
+
+    [otp_code] => 671923
+    [otp_expires_at] => 1758187274
+)
+
+[18-Sep-2025 11:16:39 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: There is already an active transaction in C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php:300
+Stack trace:
+#0 C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php(300): PDO->beginTransaction()
+#1 {main}
+  thrown in C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php on line 300
+[18-Sep-2025 11:23:20 Europe/Berlin] OTP Verification Debug - OTP entered: 698964
+[18-Sep-2025 11:23:20 Europe/Berlin] OTP Verification Debug - Transaction ID: TRX-order_68cbcf6fdd58a
+[18-Sep-2025 11:23:20 Europe/Berlin] OTP Verification Debug - Session data: Array
+(
+    [transaction_id] => TRX-order_68cbcf6fdd58a
+    [order_data] => Array
+        (
+            [user_id] => 27
+            [total_amount] => 34000
+            [advance_amount] => 34000
+            [balance_due] => 0
+            [shipping_name] => Jathu
+            [shipping_address] => jaffna
+            [shipping_city] => jappan
+            [shipping_zip] => 45698
+            [shipping_phone] => 4253674433
+            [shipping_email] => jathushan006@gmail.com
+            [billing_name] => Jathu
+            [billing_address] => jaffna
+            [billing_city] => jappan
+            [billing_zip] => 45698
+            [payment_method] => card
+            [payment_terms] => full
+            [transaction_id] => TRX-order_68cbcf6fdd58a
+        )
+
+    [cart_items] => Array
+        (
+            [2] => Array
+                (
+                    [db_product_id] => 2
+                    [id] => 2
+                    [name] => Modern Table Lamp
+                    [price] => 8500
+                    [quantity] => 4
+                    [image_path] => assets/images/modern-table-lamp.jpg
+                    [color] => 
+                )
+
+        )
+
+    [otp_code] => 698964
+    [otp_expires_at] => 1758187675
+)
+
+[18-Sep-2025 11:23:20 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'innovista.orders' doesn't exist in C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php:429
+Stack trace:
+#0 C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php(429): PDOStatement->execute()
+#1 C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php(311): finalizeOrder(Object(PDO), 27, Array, '34000', '34000', '0', 'completed', 'Jathu', 'jaffna', 'jappan', '45698', '4253674433', 'jathushan006@gm...', 'Jathu', 'jaffna', 'jappan', '45698', 'card', 'full', 'TRX-order_68cbc...')
+#2 {main}
+  thrown in C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php on line 429
+[18-Sep-2025 11:23:23 Europe/Berlin] OTP Verification Debug - OTP entered: 698964
+[18-Sep-2025 11:23:23 Europe/Berlin] OTP Verification Debug - Transaction ID: TRX-order_68cbcf6fdd58a
+[18-Sep-2025 11:23:23 Europe/Berlin] OTP Verification Debug - Session data: Array
+(
+    [transaction_id] => TRX-order_68cbcf6fdd58a
+    [order_data] => Array
+        (
+            [user_id] => 27
+            [total_amount] => 34000
+            [advance_amount] => 34000
+            [balance_due] => 0
+            [shipping_name] => Jathu
+            [shipping_address] => jaffna
+            [shipping_city] => jappan
+            [shipping_zip] => 45698
+            [shipping_phone] => 4253674433
+            [shipping_email] => jathushan006@gmail.com
+            [billing_name] => Jathu
+            [billing_address] => jaffna
+            [billing_city] => jappan
+            [billing_zip] => 45698
+            [payment_method] => card
+            [payment_terms] => full
+            [transaction_id] => TRX-order_68cbcf6fdd58a
+        )
+
+    [cart_items] => Array
+        (
+            [2] => Array
+                (
+                    [db_product_id] => 2
+                    [id] => 2
+                    [name] => Modern Table Lamp
+                    [price] => 8500
+                    [quantity] => 4
+                    [image_path] => assets/images/modern-table-lamp.jpg
+                    [color] => 
+                )
+
+        )
+
+    [otp_code] => 698964
+    [otp_expires_at] => 1758187675
+)
+
+[18-Sep-2025 11:23:23 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'innovista.orders' doesn't exist in C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php:429
+Stack trace:
+#0 C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php(429): PDOStatement->execute()
+#1 C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php(311): finalizeOrder(Object(PDO), 27, Array, '34000', '34000', '0', 'completed', 'Jathu', 'jaffna', 'jappan', '45698', '4253674433', 'jathushan006@gm...', 'Jathu', 'jaffna', 'jappan', '45698', 'card', 'full', 'TRX-order_68cbc...')
+#2 {main}
+  thrown in C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php on line 429
+[18-Sep-2025 11:23:25 Europe/Berlin] OTP Verification Debug - OTP entered: 698964
+[18-Sep-2025 11:23:25 Europe/Berlin] OTP Verification Debug - Transaction ID: TRX-order_68cbcf6fdd58a
+[18-Sep-2025 11:23:25 Europe/Berlin] OTP Verification Debug - Session data: Array
+(
+    [transaction_id] => TRX-order_68cbcf6fdd58a
+    [order_data] => Array
+        (
+            [user_id] => 27
+            [total_amount] => 34000
+            [advance_amount] => 34000
+            [balance_due] => 0
+            [shipping_name] => Jathu
+            [shipping_address] => jaffna
+            [shipping_city] => jappan
+            [shipping_zip] => 45698
+            [shipping_phone] => 4253674433
+            [shipping_email] => jathushan006@gmail.com
+            [billing_name] => Jathu
+            [billing_address] => jaffna
+            [billing_city] => jappan
+            [billing_zip] => 45698
+            [payment_method] => card
+            [payment_terms] => full
+            [transaction_id] => TRX-order_68cbcf6fdd58a
+        )
+
+    [cart_items] => Array
+        (
+            [2] => Array
+                (
+                    [db_product_id] => 2
+                    [id] => 2
+                    [name] => Modern Table Lamp
+                    [price] => 8500
+                    [quantity] => 4
+                    [image_path] => assets/images/modern-table-lamp.jpg
+                    [color] => 
+                )
+
+        )
+
+    [otp_code] => 698964
+    [otp_expires_at] => 1758187675
+)
+
+[18-Sep-2025 11:23:25 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'innovista.orders' doesn't exist in C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php:429
+Stack trace:
+#0 C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php(429): PDOStatement->execute()
+#1 C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php(311): finalizeOrder(Object(PDO), 27, Array, '34000', '34000', '0', 'completed', 'Jathu', 'jaffna', 'jappan', '45698', '4253674433', 'jathushan006@gm...', 'Jathu', 'jaffna', 'jappan', '45698', 'card', 'full', 'TRX-order_68cbc...')
+#2 {main}
+  thrown in C:\xampp\htdocs\INNOVISTA\Innovista-main\handlers\process_order.php on line 429
