@@ -17,7 +17,6 @@ require_once '../config/Database.php'; // For database connection
 // Ensure your PHPMailer 'src' folder is exactly at:
 // Innovista-final/Innovista-main/vendor/phpmailer/phpmailer/src/
 use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
 require_once '../vendor/phpmailer/phpmailer/src/Exception.php';
