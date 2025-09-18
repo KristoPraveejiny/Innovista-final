@@ -28,12 +28,12 @@ require_once '../vendor/phpmailer/phpmailer/src/SMTP.php';
 // --- SMTP Configuration (!!! YOU MUST FILL THESE IN !!!) ---
 // These are the same details you used in process_order.php
 define('SMTP_HOST', 'smtp.gmail.com');      // e.g., 'smtp.gmail.com' for Gmail
-define('SMTP_USERNAME', 'your.innovista.email@gmail.com'); // <--- REPLACE with your FULL GMAIL ADDRESS
-define('SMTP_PASSWORD', 'your_16_character_app_password'); // <--- REPLACE with the 16-CHARACTER APP PASSWORD you generated
+define('SMTP_USERNAME', 'jathushan006@gmail.com'); // <--- REPLACE with your FULL GMAIL ADDRESS
+define('SMTP_PASSWORD', 'qhaqwgaovdnvjzkm'); // <--- REPLACE with the 16-CHARACTER APP PASSWORD you generated
 define('SMTP_PORT', 587);                   // e.g., 587 (for TLS)
 define('SMTP_ENCRYPTION', 'tls');           // e.g., 'tls'
 define('SENDER_NAME', 'Innovista Support'); // Name that appears as sender
-
+//qhaq wgao vdnv jzkm
 
 header('Content-Type: application/json'); // Ensure this is set early
 
