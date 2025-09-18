@@ -26,8 +26,8 @@ require_once '../vendor/phpmailer/phpmailer/src/SMTP.php';
 // --- SMTP Configuration (!!! YOU MUST FILL THESE IN !!!) ---
 // These are the details you got from your Gmail account (App Password)
 define('SMTP_HOST', 'smtp.gmail.com');      // For Gmail, use 'smtp.gmail.com'
-define('SMTP_USERNAME', 'denujesunesan09@gmail.com'); // <-- Your FULL GMAIL ADDRESS
-define('SMTP_PASSWORD', 'aesv djby dvav hnjf'); // <-- Your 16-CHARACTER APP PASSWORD
+define('SMTP_USERNAME', 'jathushan006@gmail.com'); // <-- Your FULL GMAIL ADDRESS
+define('SMTP_PASSWORD', 'qhaqwgaovdnvjzkm'); // <-- Your 16-CHARACTER APP PASSWORD
 define('SMTP_PORT', 587);                   // For Gmail TLS, use 587
 define('SMTP_ENCRYPTION', 'tls');           // For Gmail, use 'tls'
 define('SENDER_NAME', 'Innovista Support'); // The name that appears as the sender in the email

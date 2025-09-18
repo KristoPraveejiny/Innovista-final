@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmBtn.addEventListener('click', function() {
             // Construct query string
             const queryString = new URLSearchParams(bookingData).toString();
-            iframe.src = "booking-modal.html?" + queryString;
+            iframe.src = "booking-modal.php?" + queryString;
             modalContainer.style.display = 'flex';
         });
         // Close modal by clicking outside iframe
