@@ -66,7 +66,7 @@ try {
                 <table>
                     <thead>
                         <tr>
-                            <th>Order ID</th>
+                            <!-- <th>Order ID</th> -->
                             <th>Order Date</th>
                             <th>Total Amount</th>
                             <th>Advance Paid</th> 
@@ -79,7 +79,6 @@ try {
                     <tbody>
                         <?php foreach ($orders as $order): ?>
                             <tr>
-                                <td>#<?php echo htmlspecialchars($order['id']); ?></td>
                                 <td><?php echo htmlspecialchars(date('d M Y', strtotime($order['order_date']))); ?></td>
                                 <td>Rs. <?php echo htmlspecialchars(number_format($order['total_amount'], 2)); ?></td>
                                 <td>Rs. <?php echo htmlspecialchars(number_format($order['advance_amount'], 2)); ?></td> 

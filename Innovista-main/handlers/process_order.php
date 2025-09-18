@@ -1,6 +1,12 @@
 <?php
 // C:\xampp1\htdocs\Innovista-final\Innovista-main\handlers\process_order.php
 
+// --- TEMPORARY DEBUGGING START: SHOW ALL PHP ERRORS ---
+error_reporting(E_ALL); // Report all PHP errors
+ini_set('display_errors', 1); // Display errors directly in the browser/response
+// --- TEMPORARY DEBUGGING END ---
+
+
 require_once '../config/session.php'; // For session_start(), isUserLoggedIn(), getUserId()
 require_once '../config/Database.php'; // For database connection
 
@@ -20,8 +26,8 @@ require_once '../vendor/phpmailer/phpmailer/src/SMTP.php';
 // --- SMTP Configuration (!!! YOU MUST FILL THESE IN !!!) ---
 // These are the details you got from your Gmail account (App Password)
 define('SMTP_HOST', 'smtp.gmail.com');      // For Gmail, use 'smtp.gmail.com'
-define('SMTP_USERNAME', 'denujesunesan09@gmail.com'); // <-- REPLACE with your FULL GMAIL ADDRESS (e.g., innovista.app@gmail.com)
-define('SMTP_PASSWORD', 'aesv djby dvav hnjf'); // <-- REPLACE with the 16-CHARACTER APP PASSWORD you generated
+define('SMTP_USERNAME', 'denujesunesan09@gmail.com'); // <-- Your FULL GMAIL ADDRESS
+define('SMTP_PASSWORD', 'aesv djby dvav hnjf'); // <-- Your 16-CHARACTER APP PASSWORD
 define('SMTP_PORT', 587);                   // For Gmail TLS, use 587
 define('SMTP_ENCRYPTION', 'tls');           // For Gmail, use 'tls'
 define('SENDER_NAME', 'Innovista Support'); // The name that appears as the sender in the email
@@ -31,6 +37,13 @@ header('Content-Type: application/json'); // Ensure this is set early
 
 // Helper to send JSON response and exit
 function sendJsonResponse(bool $success, string $message, array $data = []): void {
+    // --- TEMPORARY DEBUGGING: Clear any unexpected output before sending JSON ---
+    if (ob_get_length() > 0) {
+        // This clears any HTML or warnings that PHP might have outputted BEFORE json_encode
+        ob_clean(); 
+    }
+    // --- END TEMPORARY DEBUGGING ---
+
     echo json_encode(array_merge(['success' => $success, 'message' => $message], $data));
     exit();
 }
@@ -94,13 +107,6 @@ if (empty($cart)) {
     sendJsonResponse(false, 'Your cart is empty. Please add products before checking out.');
 }
 
-// --- IMPORTANT: Implement CSRF Protection Here (HIGHLY RECOMMENDED) ---
-// For POST requests, you would typically check a CSRF token.
-// Example:
-// if (!validate_csrf_token($_POST['csrf_token'])) {
-//     sendJsonResponse(false, 'Invalid request. Please try again.');
-// }
-
 
 $database = new Database();
 $conn = null; // Initialize $conn to null to handle connection errors gracefully
@@ -113,7 +119,7 @@ try {
 
 
 try {
-    $conn->beginTransaction(); // Start a database transaction
+    $conn->beginTransaction(); 
 
     $action = filter_input(INPUT_POST, 'action', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
@@ -228,9 +234,6 @@ try {
         } else { // Cash on Delivery (COD) 
             $transaction_id = 'COD-ADV-' . uniqid(); // Internal reference for COD advance
 
-            // For COD, the order is finalized directly with status `advance_paid` or `pending`
-            // based on whether it's an advance or full payment.
-            // If advance is 0, status is 'pending'. If advance > 0, status is 'advance_paid'.
             $status_for_cod = ($advanceAmount > 0) ? 'advance_paid' : 'pending'; 
 
             $finalized_order_id = finalizeOrder(
@@ -240,7 +243,7 @@ try {
                 $cartTotal, 
                 $advanceAmount, 
                 $balanceDue,    
-                $status_for_cod, // Use determined status for COD
+                $status_for_cod, 
                 $shipping_name, $shipping_address, $shipping_city, $shipping_zip, $shipping_phone, $shipping_email, 
                 $billing_name, $billing_address, $billing_city, $billing_zip, 
                 $payment_method, $selected_payment_terms, 
@@ -422,7 +425,7 @@ function finalizeOrder(
         $stmt_order_item->bindParam(':quantity', $item['quantity'], PDO::PARAM_INT);
         $stmt_order_item->bindParam(':image_path', $item['image_path']);
         $stmt_order_item->bindParam(':color', $item['color']);
-        $stmt_order_item->execute();
+        $stmt_order_item->execute(); // <--- FIX: Ensure this is $stmt_order_item
     }
     
     return $order_id;
