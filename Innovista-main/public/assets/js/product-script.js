@@ -1,4 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Hardcoded Painting Brands ---
+    const hardcodedPaintingBrands = [
+        {
+            id: 'asianpaints',
+            name: 'Asian Paints',
+            image_path_full: 'assets/images/brands/asianpaints.png'
+        },
+        {
+            id: 'berger',
+            name: 'Berger Paints',
+            image_path_full: 'assets/images/brands/berger.png'
+        },
+        {
+            id: 'dulux',
+            name: 'Dulux',
+            image_path_full: 'assets/images/brands/dulux.png'
+        }
+        // Add more brands as needed
+    ];
     // --- DOM Elements ---
     const serviceNavItems = document.querySelectorAll('.service-nav .nav-item');
     const categoryItems = document.querySelectorAll('.category-list .category-item');

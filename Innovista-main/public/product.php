@@ -3,9 +3,6 @@
 $pageTitle = 'Shop Products'; 
 // Include the master header, which also starts the session
 include 'header.php'; 
-
-// No database fetch for products needed here as they are hardcoded in the HTML below.
-// But the 'header.php' already includes session.php, so functions like isUserLoggedIn() are available.
 ?>
 
 <!-- =========================================
@@ -52,36 +49,36 @@ include 'header.php';
                 <h2>Interior Design Collection</h2>
                 <p>Premium furnishings and materials curated for sophisticated living spaces.</p>
             </div>
-            <div class="product-grid" id="interior-design-grid"> <!-- Added ID -->
+            <div class="product-grid">
                 <!-- Furniture -->
-                <div class="product-item" data-category="furniture" data-product-id="1" data-product-description="Luxurious upholstered sofa perfect for modern living spaces, available in multiple fabric options.">
-                    <div class="product-image"><img src="assets/images/modern-living-room-sofa.jpg" alt="Sofa"><div class="product-badge premium">Premium</div></div>
-                    <div class="product-details"><p class="brand-name">Pottery Barn</p><h4>Buchanan Upholstered Sofa</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.8)</span></div><div class="price-section"><span class="price">Rs. 1,19,900</span><button class="btn-add-cart" data-product-id="1" data-product-name="Buchanan Upholstered Sofa" data-product-price="119900" data-image-path="assets/images/modern-living-room-sofa.jpg" data-color-options='["#8B4513", "#D2B48C", "#A9A9A9", "#FFFFFF"]' data-product-description="Luxurious upholstered sofa perfect for modern living spaces, available in multiple fabric options."><i class="fas fa-shopping-cart"></i></button></div></div>
+                <div class="product-item" data-category="furniture">
+                    <div class="product-image"><img src="assets/images/images/modern-living-room-sofa.jpg" alt="Sofa"><div class="product-badge premium">Premium</div></div>
+                    <div class="product-details"><p class="brand-name">Pottery Barn</p><h4>Buchanan Upholstered Sofa</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.8)</span></div><div class="price-section"><span class="price">Rs. 1,19,900</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
                 </div>
                 <!-- Lighting -->
-                <div class="product-item" data-category="lighting" data-product-id="2" data-product-description="Elegant table lamp with adjustable brightness, ideal for bedside or study tables.">
-                    <div class="product-image"><img src="assets/images/modern-table-lamp.jpg" alt="Lamp"><div class="product-badge">Modern</div></div>
-                    <div class="product-details"><p class="brand-name">LightLux</p><h4>Modern Table Lamp</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><span>(4.7)</span></div><div class="price-section"><span class="price">Rs. 8,500</span><button class="btn-add-cart" data-product-id="2" data-product-name="Modern Table Lamp" data-product-price="8500" data-image-path="assets/images/modern-table-lamp.jpg" data-color-options='["#FFFFFF", "#000000", "#FFD700"]' data-product-description="Elegant table lamp with adjustable brightness, ideal for bedside or study tables."><i class="fas fa-shopping-cart"></i></button></div></div>
+                <div class="product-item" data-category="lighting">
+                    <div class="product-image"><img src="assets/images/images/modern-table-lamp.jpg" alt="Lamp"><div class="product-badge">Modern</div></div>
+                    <div class="product-details"><p class="brand-name">LightLux</p><h4>Modern Table Lamp</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><span>(4.7)</span></div><div class="price-section"><span class="price">Rs. 8,500</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
                 </div>
                 <!-- Bathroom -->
-                <div class="product-item" data-category="bath" data-product-id="3" data-product-description="Stylish ceramic vanity sink with sleek design, perfect for contemporary bathrooms.">
-                    <div class="product-image"><img src="assets/images/bathroom 11.webp" alt="Bathroom Sink"><div class="product-badge">Elegant</div></div>
-                    <div class="product-details"><p class="brand-name">AquaLux</p><h4>Elegant Vanity Sink</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.9)</span></div><div class="price-section"><span class="price">Rs. 26,500</span><button class="btn-add-cart" data-product-id="3" data-product-name="Elegant Vanity Sink" data-product-price="26500" data-image-path="assets/images/bathroom 11.webp" data-color-options='["#FFFFFF", "#F0F8FF"]' data-product-description="Stylish ceramic vanity sink with sleek design, perfect for contemporary bathrooms."><i class="fas fa-shopping-cart"></i></button></div></div>
+                <div class="product-item" data-category="bath">
+                    <div class="product-image"><img src="assets/images/images/bathroom 11.webp" alt="Bathroom Sink"><div class="product-badge">Elegant</div></div>
+                    <div class="product-details"><p class="brand-name">AquaLux</p><h4>Elegant Vanity Sink</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.9)</span></div><div class="price-section"><span class="price">Rs. 26,500</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
                 </div>
                 <!-- Kitchen -->
-                 <div class="product-item" data-category="kitchen" data-product-id="4" data-product-description="High-quality modular kitchen cabinet set with soft-close drawers and customisable finishes.">
-                    <div class="product-image"><img src="assets/images/kitchen-cabinet-1.jpg" alt="Kitchen Cabinets"><div class="product-badge">Modern</div></div>
-                    <div class="product-details"><p class="brand-name">KitchenCraft</p><h4>Modern Cabinet Set</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><span>(4.2)</span></div><div class="price-section"><span class="price">Rs. 85,000</span><button class="btn-add-cart" data-product-id="4" data-product-name="Modern Cabinet Set" data-product-price="85000" data-image-path="assets/images/kitchen-cabinet-1.jpg" data-color-options='["#A9A9A9", "#556B2F", "#FFFFFF"]' data-product-description="High-quality modular kitchen cabinet set with soft-close drawers and customisable finishes."><i class="fas fa-shopping-cart"></i></button></div></div>
+                 <div class="product-item" data-category="kitchen">
+                    <div class="product-image"><img src="assets/images/images/kitchen-cabinet-1.jpg" alt="Kitchen Cabinets"><div class="product-badge">Modern</div></div>
+                    <div class="product-details"><p class="brand-name">KitchenCraft</p><h4>Modern Cabinet Set</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><span>(4.2)</span></div><div class="price-section"><span class="price">Rs. 85,000</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
                 </div>
                  <!-- More Furniture -->
-                <div class="product-item" data-category="furniture" data-product-id="5" data-product-description="Sturdy and stylish bed frame designed for comfort and durability.">
-                    <div class="product-image"><img src="assets/images/contemporary-bed-frame.jpg" alt="Bed Frame"><div class="product-badge">Popular</div></div>
-                    <div class="product-details"><p class="brand-name">BedLux</p><h4>Contemporary Bed Frame</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><span>(4.6)</span></div><div class="price-section"><span class="price">Rs. 28,500</span><button class="btn-add-cart" data-product-id="5" data-product-name="Contemporary Bed Frame" data-product-price="28500" data-image-path="assets/images/contemporary-bed-frame.jpg" data-color-options='["#696969", "#800000", "#D2B48C"]' data-product-description="Sturdy and stylish bed frame designed for comfort and durability."><i class="fas fa-shopping-cart"></i></button></div></div>
+                <div class="product-item" data-category="furniture">
+                    <div class="product-image"><img src="assets/images/images/contemporary-bed-frame.jpg" alt="Bed Frame"><div class="product-badge">Popular</div></div>
+                    <div class="product-details"><p class="brand-name">BedLux</p><h4>Contemporary Bed Frame</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><span>(4.6)</span></div><div class="price-section"><span class="price">Rs. 28,500</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
                 </div>
                 <!-- More Lighting -->
-                <div class="product-item" data-category="lighting" data-product-id="6" data-product-description="Exquisite ceiling light fixture with LED technology, ideal for adding a touch of luxury to any room.">
-                    <div class="product-image"><img src="assets/images/luxury-ceiling-light.jpg" alt="Ceiling Light"><div class="product-badge premium">Luxury</div></div>
-                    <div class="product-details"><p class="brand-name">LightLux</p><h4>Luxury Ceiling Fixture</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.9)</span></div><div class="price-section"><span class="price">Rs. 28,500</span><button class="btn-add-cart" data-product-id="6" data-product-name="Luxury Ceiling Fixture" data-product-price="28500" data-image-path="assets/images/luxury-ceiling-light.jpg" data-color-options='["#FFFFFF", "#FFD700"]' data-product-description="Exquisite ceiling light fixture with LED technology, ideal for adding a touch of luxury to any room."><i class="fas fa-shopping-cart"></i></button></div></div>
+                <div class="product-item" data-category="lighting">
+                    <div class="product-image"><img src="assets/images/images/luxury-ceiling-light.jpg" alt="Ceiling Light"><div class="product-badge premium">Luxury</div></div>
+                    <div class="product-details"><p class="brand-name">LightLux</p><h4>Luxury Ceiling Fixture</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.9)</span></div><div class="price-section"><span class="price">Rs. 28,500</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
                 </div>
             </div>
         </section>
@@ -93,19 +90,7 @@ include 'header.php';
                 <p>Select a brand to get started, then choose your project type and color.</p>
             </div>
             <div id="painting-brand-grid" class="brand-grid">
-                <!-- Brand Cards for Painting -->
-                <div class="brand-card" data-brand-id="7" data-brand-name="Global Paint" >
-                    <img src="assets/images/paint_brands/global_paint_professional.png" alt="Global Paint" class="brand-logo" />
-                    <div class="brand-title">Global Paint</div>
-                </div>
-                <div class="brand-card" data-brand-id="8" data-brand-name="Asian Paints">
-                    <img src="assets/images/paint_brands/asian_paints_apex_ultima.png" alt="Asian Paints" class="brand-logo" />
-                    <div class="brand-title">Asian Paints</div>
-                </div>
-                <div class="brand-card" data-brand-id="9" data-brand-name="Nippon Paint">
-                    <img src="assets/images/paint_brands/nippon_paint_satin_finish.png" alt="Nippon Paint" class="brand-logo" />
-                    <div class="brand-title">Nippon Paint</div>
-                </div>
+                <!-- Brand cards will be rendered by JS -->
             </div>
             <div id="painting-color-panel" class="color-panel" style="display:none;">
                 <button id="back-to-brands" class="btn btn-secondary" style="margin-bottom:1rem;">&larr; Back to Brands</button>
@@ -131,18 +116,6 @@ include 'header.php';
                 </div>
                 <h3 id="color-panel-title"></h3>
                 <div id="painting-color-grid" class="color-grid"></div>
-                <div id="paintTypeSheen" style="margin-top:1rem; font-style:italic; color:#666;"></div> 
-            </div>
-
-            <div class="section-header mt-5">
-                <h2>Painting Tools & Supplies</h2>
-            </div>
-            <div class="product-grid" id="painting-tools-grid"> <!-- Added ID -->
-                <!-- Painting Tool 1 -->
-                <div class="product-item" data-category="tools" data-product-id="10" data-product-description="Complete set of high-quality paint rollers and brushes.">
-                    <div class="product-image"><img src="assets/images/paint_roller_set.jpg" alt="Professional Roller Set"><div class="product-badge">Essential</div></div>
-                    <div class="product-details"><p class="brand-name">ProTools</p><h4>Professional Roller Set</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><span>(4.3)</span></div><div class="price-section"><span class="price">Rs. 1,500</span><button class="btn-add-cart" data-product-id="10" data-product-name="Professional Roller Set" data-product-price="1500" data-image-path="assets/images/paint_roller_set.jpg" data-product-description="Complete set of high-quality paint rollers and brushes."><i class="fas fa-shopping-cart"></i></button></div></div>
-                </div>
             </div>
         </section>
 
@@ -152,26 +125,26 @@ include 'header.php';
                 <h2>Restoration Materials</h2>
                 <p>Everything you need to bring your treasured items back to life.</p>
             </div>
-            <div class="product-grid" id="restoration-grid"> <!-- Added ID -->
+            <div class="product-grid">
                 <!-- Restoration Product 1 -->
-                <div class="product-item" data-category="wood-care" data-product-id="11" data-product-description="Deep-penetrating polish to nourish and protect wooden surfaces.">
+                <div class="product-item">
                     <div class="product-image"><img src="https://images.unsplash.com/photo-1595431658650-47759b855543?q=80&w=300" alt="Wood Polish"><div class="product-badge">Wood Care</div></div>
-                    <div class="product-details"><p class="brand-name">RestorePro</p><h4>Premium Wood Polish</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.9)</span></div><div class="price-section"><span class="price">Rs. 1,200</span><button class="btn-add-cart" data-product-id="11" data-product-name="Premium Wood Polish" data-product-price="1200" data-image-path="https://images.unsplash.com/photo-1595431658650-47759b855543?q=80&w=300" data-product-description="Deep-penetrating polish to nourish and protect wooden surfaces."><i class="fas fa-shopping-cart"></i></button></div></div>
+                    <div class="product-details"><p class="brand-name">RestorePro</p><h4>Premium Wood Polish</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.9)</span></div><div class="price-section"><span class="price">Rs. 1,200</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
                 </div>
                 <!-- Restoration Product 2 -->
-                <div class="product-item" data-category="metal-care" data-product-id="12" data-product-description="Complete kit for cleaning, polishing, and protecting various metal types.">
+                <div class="product-item">
                     <div class="product-image"><img src="https://images.unsplash.com/photo-1589939705384-5185137a7f0f?q=80&w=300" alt="Metal Cleaner"><div class="product-badge">Metal Care</div></div>
-                    <div class="product-details"><p class="brand-name">MetalCare</p><h4>Metal Restoration Kit</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><span>(4.5)</span></div><div class="price-section"><span class="price">Rs. 2,800</span><button class="btn-add-cart" data-product-id="12" data-product-name="Metal Restoration Kit" data-product-price="2800" data-image-path="https://images.unsplash.com/photo-1589939705384-5185137a7f0f?q=80&w=300" data-product-description="Complete kit for cleaning, polishing, and protecting various metal types."><i class="fas fa-shopping-cart"></i></button></div></div>
+                    <div class="product-details"><p class="brand-name">MetalCare</p><h4>Metal Restoration Kit</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><span>(4.5)</span></div><div class="price-section"><span class="price">Rs. 2,800</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
                 </div>
                 <!-- Restoration Product 3 -->
-                <div class="product-item" data-category="stone-care" data-product-id="13" data-product-description="Protective sealant for natural stone surfaces, prevents stains and erosion.">
+                <div class="product-item">
                     <div class="product-image"><img src="https://images.unsplash.com/photo-1600585152220-0320f7f3a9d4?q=80&w=300" alt="Stone Sealer"><div class="product-badge">Stone Care</div></div>
-                    <div class="product-details"><p class="brand-name">StoneGuard</p><h4>Stone Sealer & Protector</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><span>(4.4)</span></div><div class="price-section"><span class="price">Rs. 3,500</span><button class="btn-add-cart" data-product-id="13" data-product-name="Stone Sealer & Protector" data-product-price="3500" data-image-path="https://images.unsplash.com/photo-1600585152220-0320f7f3a9d4?q=80&w=300" data-product-description="Protective sealant for natural stone surfaces, prevents stains and erosion."><i class="fas fa-shopping-cart"></i></button></div></div>
+                    <div class="product-details"><p class="brand-name">StoneGuard</p><h4>Stone Sealer & Protector</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><span>(4.4)</span></div><div class="price-section"><span class="price">Rs. 3,500</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
                 </div>
                 <!-- Restoration Product 4 -->
-                <div class="product-item" data-category="tools" data-product-id="14" data-product-description="Comprehensive set of tools for various restoration tasks.">
+                <div class="product-item">
                     <div class="product-image"><img src="https://images.unsplash.com/photo-1556912173-356c3383a54b?q=80&w=300" alt="Restoration Tools"><div class="product-badge">Tools</div></div>
-                    <div class="product-details"><p class="brand-name">ToolMaster</p><h4>Professional Tool Set</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.8)</span></div><div class="price-section"><span class="price">Rs. 5,500</span><button class="btn-add-cart" data-product-id="14" data-product-name="Professional Tool Set" data-product-price="5500" data-image-path="https://images.unsplash.com/photo-1556912173-356c3383a54b?q=80&w=300" data-product-description="Comprehensive set of tools for various restoration tasks."><i class="fas fa-shopping-cart"></i></button></div></div>
+                    <div class="product-details"><p class="brand-name">ToolMaster</p><h4>Professional Tool Set</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.8)</span></div><div class="price-section"><span class="price">Rs. 5,500</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
                 </div>
             </div>
         </section>
@@ -189,7 +162,7 @@ include 'header.php';
             <div class="modal-image"><img id="modalImage" src="" alt="Product Image"></div>
             <div class="modal-details">
                 <p class="modal-brand" id="modalBrand"></p>
-                <h2 id="modalTitle" data-product-id=""></h2> <!-- Added data-product-id -->
+                <h2 id="modalTitle"></h2>
                 <div id="modalPrice" class="modal-price"></div>
                 <p id="modalDescription" class="modal-description"></p>
                 <div class="modal-options">
@@ -219,3 +192,4 @@ include 'header.php';
 include 'footer.php'; 
 ?>
 <script src="assets/js/product-script.js"></script>
+?>
