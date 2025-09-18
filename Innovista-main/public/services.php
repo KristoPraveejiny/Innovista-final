@@ -1,3 +1,4 @@
+
 <?php
 // Define the page title for this specific page
 $pageTitle = 'Our Services'; 
@@ -15,9 +16,9 @@ $isLoggedInFlag = isUserLoggedIn() ? 'true' : 'false';
      ========================================= -->
 <section class="services-hero">
     <div class="hero-slider">
-        <div class="hero-slide active" style="background-image: url('assets/images/service/head1.jpg');"></div>
-        <div class="hero-slide" style="background-image: url('assets/images/service/head2.jpg');"></div>
-        <div class="hero-slide" style="background-image: url('assets/images/service/head3.jpg');"></div>
+        <div class="hero-slide active" style="background-image: url('assets/images/images/service/head1.jpg');"></div>
+        <div class="hero-slide" style="background-image: url('assets/images/images/service/head2.jpg');"></div>
+        <div class="hero-slide" style="background-image: url('assets/images/images/service/head3.jpg');"></div>
     </div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
@@ -43,7 +44,7 @@ $isLoggedInFlag = isUserLoggedIn() ? 'true' : 'false';
 <!-- =========================================
      MAIN SERVICES LAYOUT
      ========================================= -->
-<main class="services-layout container page-section" id="services-layout"> <!-- Added ID for JS check -->
+<main class="services-layout container page-section">
     <aside class="service-sidebar">
         <h3 class="sidebar-title">Service Categories</h3>
         <button class="service-tab active" data-service="interior-design"><i class="fas fa-couch"></i> Interior Design</button>
@@ -59,17 +60,17 @@ $isLoggedInFlag = isUserLoggedIn() ? 'true' : 'false';
                 <p>From concept to completion, we create spaces that are both beautiful and functional. Choose individual services or our all-inclusive package.</p>
             </div>
             <div class="subcategory-grid">
-                <div class="subcategory-card"><img src="assets/images/service/ceiling.jpg" alt="Ceiling & Lighting"><h4>Ceiling & Lighting</h4><p>Modern ceiling and lighting solutions.</p><a href="serviceprovider.php?service=Interior%20Design&subcategory=Ceiling%20%26%20Lighting" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/interior 1.jpg" alt="Space Planning"><h4>Space Planning</h4><p>Efficient and functional layouts.</p><a href="serviceprovider.php?service=Interior%20Design&subcategory=Space%20Planning" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/kitchen.avif" alt="Modular Kitchen"><h4>Modular Kitchen</h4><p>Smart and stylish kitchen designs.</p><a href="serviceprovider.php?service=Interior%20Design&subcategory=Modular%20Kitchen" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/bathroom.jpg" alt="Bathroom Design"><h4>Bathroom Design</h4><p>Elegant and relaxing bathroom spaces.</p><a href="serviceprovider.php?service=Interior%20Design&subcategory=Bathroom%20Design" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/wood.jpg" alt="Carpentry"><h4>Carpentry & Woodwork</h4><p>Custom woodwork with fine finishes.</p><a href="serviceprovider.php?service=Interior%20Design&subcategory=Carpentry%20%26%20Woodwork" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/furniture.jpg" alt="Furniture Design"><h4>Furniture Design</h4><p>Unique and comfortable furnishings.</p><a href="serviceprovider.php?service=Interior%20Design&subcategory=Furniture%20Design" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/ceiling.jpg" alt="Ceiling & Lighting"><h4>Ceiling & Lighting</h4><p>Modern ceiling and lighting solutions.</p><a href="serviceprovider.php?service=Interior%20Design&subcategory=Ceiling%20%26%20Lighting" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/interior 1.jpg" alt="Space Planning"><h4>Space Planning</h4><p>Efficient and functional layouts.</p><a href="serviceprovider.php?service=Interior%20Design&subcategory=Space%20Planning" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/kitchen.avif" alt="Modular Kitchen"><h4>Modular Kitchen</h4><p>Smart and stylish kitchen designs.</p><a href="serviceprovider.php?service=Interior%20Design&subcategory=Modular%20Kitchen" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/bathroom.jpg" alt="Bathroom Design"><h4>Bathroom Design</h4><p>Elegant and relaxing bathroom spaces.</p><a href="serviceprovider.php?service=Interior%20Design&subcategory=Bathroom%20Design" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/wood.jpg" alt="Carpentry"><h4>Carpentry & Woodwork</h4><p>Custom woodwork with fine finishes.</p><a href="serviceprovider.php?service=Interior%20Design&subcategory=Carpentry%20%26%20Woodwork" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/furniture.jpg" alt="Furniture Design"><h4>Furniture Design</h4><p>Unique and comfortable furnishings.</p><a href="serviceprovider.php?service=Interior%20Design&subcategory=Furniture%20Design" class="get-service-link">Get Service →</a></div>
             </div>
             <div class="package-section">
                 <h4>Complete Interior Package</h4>
                 <p>Get all our interior design expertise bundled at a discounted rate for a seamless transformation.</p>
-                <a href="serviceprovider.php?service=Interior%20Design" class="btn btn-primary btn-get-package" id="getAllInteriorDesignServicesBtn">Get All Interior Design Services</a>
+                <a href="serviceprovider.php?service=Interior%20Design" class="btn btn-primary btn-get-package" id="getAllServicesBtn">Get All Interior Design Services</a>
             </div>
         </div>
 
@@ -80,17 +81,17 @@ $isLoggedInFlag = isUserLoggedIn() ? 'true' : 'false';
                 <p>Expert painting for residential and commercial spaces, ensuring a flawless finish that lasts.</p>
             </div>
             <div class="subcategory-grid">
-                <div class="subcategory-card"><img src="assets/images/service/interiorpaint.jpg" alt="Interior Painting"><h4>Interior Painting</h4><p>Beautiful and durable indoor finishes.</p><a href="serviceprovider.php?service=Painting&subcategory=Interior%20Painting" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/exterior.jpg" alt="Exterior Painting"><h4>Exterior Painting</h4><p>Weatherproof and lasting exterior color.</p><a href="serviceprovider.php?service=Painting&subcategory=Exterior%20Painting" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/water.jpg" alt="Water Proofing"><h4>Water & Damp Proofing</h4><p>Protect your walls from moisture damage.</p><a href="serviceprovider.php?service=Painting&subcategory=Water%20%26%20Damp%20Proofing" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/commercial.webp" alt="Commercial Painting"><h4>Commercial Painting</h4><p>Professional finishes for your business.</p><a href="serviceprovider.php?service=Painting&subcategory=Commercial%20Painting" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/art.jpg" alt="Wall Art & Murals"><h4>Wall Art & Murals</h4><p>Creative custom designs and murals.</p><a href="serviceprovider.php?service=Painting&subcategory=Wall%20Art%20%26%20Murals" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/paintconsul.jpg" alt="Color Consultation"><h4>Color Consultation</h4><p>Expert advice on picking the perfect palette.</p><a href="serviceprovider.php?service=Painting&subcategory=Color%20Consultation" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/interiorpaint.jpg" alt="Interior Painting"><h4>Interior Painting</h4><p>Beautiful and durable indoor finishes.</p><a href="serviceprovider.php?service=Painting&subcategory=Interior%20Painting" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/exterior.jpg" alt="Exterior Painting"><h4>Exterior Painting</h4><p>Weatherproof and lasting exterior color.</p><a href="serviceprovider.php?service=Painting&subcategory=Exterior%20Painting" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/water.jpg" alt="Water Proofing"><h4>Water & Damp Proofing</h4><p>Protect your walls from moisture damage.</p><a href="serviceprovider.php?service=Painting&subcategory=Water%20%26%20Damp%20Proofing" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/commercial.webp" alt="Commercial Painting"><h4>Commercial Painting</h4><p>Professional finishes for your business.</p><a href="serviceprovider.php?service=Painting&subcategory=Commercial%20Painting" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/art.jpg" alt="Wall Art & Murals"><h4>Wall Art & Murals</h4><p>Creative custom designs and murals.</p><a href="serviceprovider.php?service=Painting&subcategory=Wall%20Art%20%26%20Murals" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/paintconsul.jpg" alt="Color Consultation"><h4>Color Consultation</h4><p>Expert advice on picking the perfect palette.</p><a href="serviceprovider.php?service=Painting&subcategory=Color%20Consultation" class="get-service-link">Get Service →</a></div>
             </div>
             <div class="package-section">
                 <h4>Complete Painting Package</h4>
                 <p>Bundle interior, exterior, and waterproofing services for a comprehensive painting solution.</p>
-                <a href="serviceprovider.php?service=Painting" class="btn btn-primary btn-get-package" id="getAllPaintingServicesBtn">Get All Painting Services</a>
+                <button class="btn btn-primary btn-get-package" id="getAllServicesBtnPainting">Get All Painting Services</button>
             </div>
         </div>
       
@@ -101,21 +102,39 @@ $isLoggedInFlag = isUserLoggedIn() ? 'true' : 'false';
                 <p>Breathe new life into your property. We restore and preserve the beauty of your spaces and furniture.</p>
             </div>
             <div class="subcategory-grid">
-                <div class="subcategory-card"><img src="assets/images/service/wallreno.jpg" alt="Wall Repairs"><h4>Wall Repairs & Plastering</h4><p>Seamless wall and ceiling restoration.</p><a href="serviceprovider.php?service=Restoration&subcategory=Wall%20Repairs%20%26%20Plastering" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/floorreno.jpg" alt="Floor Restoration"><h4>Floor Restoration</h4><p>Refinishing and repairs for all floor types.</p><a href="serviceprovider.php?service=Restoration&subcategory=Floor%20Restoration" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/doorreno.jpg" alt="Carpentry Repairs"><h4>Door & Window Repairs</h4><p>Expert restoration of wooden fixtures.</p><a href="serviceprovider.php?service=Restoration&subcategory=Door%20%26%20Window%20Repairs" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/spacereno.jpg" alt="Old Space Transformation"><h4>Old Space Transformation</h4><p>Modernize your interiors completely.</p><a href="serviceprovider.php?service=Restoration&subcategory=Old%20Space%20Transformation" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/furniture.jpg" alt="Furniture Restoration"><h4>Furniture Restoration</h4><p>Restore antique and modern furniture.</p><a href="serviceprovider.php?service=Restoration&subcategory=Furniture%20Restoration" class="get-service-link">Get Service →</a></div>
-                <div class="subcategory-card"><img src="assets/images/service/roomreno.jpg" alt="Building Renovation"><h4>Full Building Renovation</h4><p>Complete structural and aesthetic renewal.</p><a href="serviceprovider.php?service=Restoration&subcategory=Full%20Building%20Renovation" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/wallreno.jpg" alt="Wall Repairs"><h4>Wall Repairs & Plastering</h4><p>Seamless wall and ceiling restoration.</p><a href="serviceprovider.php?service=Restoration&subcategory=Wall%20Repairs%20%26%20Plastering" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/floorreno.jpg" alt="Floor Restoration"><h4>Floor Restoration</h4><p>Refinishing and repairs for all floor types.</p><a href="serviceprovider.php?service=Restoration&subcategory=Floor%20Restoration" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/doorreno.jpg" alt="Carpentry Repairs"><h4>Door & Window Repairs</h4><p>Expert restoration of wooden fixtures.</p><a href="serviceprovider.php?service=Restoration&subcategory=Door%20%26%20Window%20Repairs" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/spacereno.jpg" alt="Old Space Transformation"><h4>Old Space Transformation</h4><p>Modernize your interiors completely.</p><a href="serviceprovider.php?service=Restoration&subcategory=Old%20Space%20Transformation" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/furniture.jpg" alt="Furniture Restoration"><h4>Furniture Restoration</h4><p>Restore antique and modern furniture.</p><a href="serviceprovider.php?service=Restoration&subcategory=Furniture%20Restoration" class="get-service-link">Get Service →</a></div>
+                <div class="subcategory-card"><img src="assets/images/images/service/roomreno.jpg" alt="Building Renovation"><h4>Full Building Renovation</h4><p>Complete structural and aesthetic renewal.</p><a href="serviceprovider.php?service=Restoration&subcategory=Full%20Building%20Renovation" class="get-service-link">Get Service →</a></div>
             </div>
             <div class="package-section">
                 <h4>Complete Restoration Package</h4>
                 <p>A full-service solution to completely renovate and restore your property from top to bottom.</p>
-                <a href="serviceprovider.php?service=Restoration" class="btn btn-primary btn-get-package" id="getAllRestorationServicesBtn">Get All Restoration Services</a>
+                <button class="btn btn-primary btn-get-package" id="getAllServicesBtnRestoration">Get All Restoration Services</button>
             </div>
         </div>
     </section>
 </main>
+
+<script>
+// Ensure unauthenticated users clicking any "Get Service" link go to login
+(function(){
+    var isLoggedIn = <?php echo $isLoggedInFlag; ?>;
+    if (!isLoggedIn) {
+        document.addEventListener('DOMContentLoaded', function(){
+            var links = document.querySelectorAll('.get-service-link');
+            links.forEach(function(a){
+                a.addEventListener('click', function(e){
+                    e.preventDefault();
+                    window.location.href = './signup.php';
+                });
+            });
+        });
+    }
+})();
+</script>
 
 <!-- =========================================
      NEW: OUR COMMITMENT TO QUALITY SECTION
@@ -178,7 +197,7 @@ $isLoggedInFlag = isUserLoggedIn() ? 'true' : 'false';
         <form id="quotePreviewForm">
             <div class="form-group">
                 <label for="previewProjectDescription"><strong>Project Description</strong></label>
-                <textarea id="previewProjectDescription" rows="5" style="width:100%;padding:0.5rem;" required placeholder="Please describe your project in detail. Include room dimensions, desired style, and any specific requirements." data-provider-id="" data-service-type="" data-subcategory=""></textarea> <!-- Added data attributes for JS to set -->
+                <textarea id="previewProjectDescription" rows="5" style="width:100%;padding:0.5rem;" required placeholder="Please describe your project in detail. Include room dimensions, desired style, and any specific requirements."></textarea>
             </div>
             <div class="form-group">
                 <label><strong>Upload Photos (Optional)</strong></label>
@@ -240,7 +259,6 @@ $isLoggedInFlag = isUserLoggedIn() ? 'true' : 'false';
 </div>
 
 <style>
-/* This CSS was provided by you previously. I am including it here as part of the complete services.php file. */
 .service-modal {
     position: fixed;
     z-index: 1000;
@@ -598,13 +616,616 @@ $isLoggedInFlag = isUserLoggedIn() ? 'true' : 'false';
    
     
 
-<script>
-// This JavaScript code block needs to be part of the services.js file
-// NOT embedded directly in public/services.php anymore.
-// The code below is a cleaned up version for services.js
+document.addEventListener('DOMContentLoaded', function() {
+    // Modal and button variables (must be defined before any function uses them)
+    const modal = document.getElementById('serviceModal');
+    const closeModal = document.querySelector('.close-service-modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const serviceContent = document.getElementById('serviceContent');
+    const getAllServicesBtn = document.getElementById('getAllServicesBtn');
+    const getAllServicesBtnPainting = document.getElementById('getAllServicesBtnPainting');
+    const getAllServicesBtnRestoration = document.getElementById('getAllServicesBtnRestoration');
+
+    // Add event listeners to sidebar service category tabs
+    const serviceTabs = document.querySelectorAll('.service-tab');
+    serviceTabs.forEach(function(tab) {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent default button behavior
+            // Remove active class from all tabs
+            serviceTabs.forEach(t => t.classList.remove('active'));
+            // Add active class to clicked tab
+            tab.classList.add('active');
+            // Determine category
+            let category = '';
+            if (tab.dataset.service === 'interior-design') {
+                category = 'Interior Design';
+            } else if (tab.dataset.service === 'painting') {
+                category = 'Painting';
+            } else if (tab.dataset.service === 'restoration') {
+                category = 'Restoration';
+            }
+            if (category) {
+                showServicesByCategory(category);
+                if (modal) modal.style.display = 'flex';
+            }
+        });
+    });
+}); 
+ // Close modal when clicking X
+    closeModal.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+    
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Function to show services by category
+    function showServicesByCategory(category) {
+        modalTitle.textContent = `${category} Services`;
+        serviceContent.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><br>Loading services...</div>';
+        modal.style.display = 'flex';
+        
+        fetch(`get_services.php?action=get_services_by_category&category=${encodeURIComponent(category)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.services && data.services.length > 0) {
+                        displayServices(data.services);
+                    } else {
+                        serviceContent.innerHTML = `<div class="error">No ${category} services found. Please check if providers are available for this category.</div>`;
+                    }
+                } else {
+                    serviceContent.innerHTML = '<div class="error">Error: ' + data.message + '</div>';
+                }
+            })
+            .catch(error => {
+                serviceContent.innerHTML = '<div class="error">Error loading services. Please try again.</div>';
+                console.error('Error:', error);
+            });
+    }
+
+    Get All Services button click handlers
+    getAllServicesBtn.addEventListener('click', function() {
+        showServicesByCategory('Interior Design');
+    });
+    
+    getAllServicesBtnPainting.addEventListener('click', function() {
+        showServicesByCategory('Painting');
+    });
+    
+    getAllServicesBtnRestoration.addEventListener('click', function() {
+        showServicesByCategory('Restoration');
+    });
+    
+
+    function displayServices(services) {
+        if (!services || services.length === 0) {
+            serviceContent.innerHTML = '<div class="error">No services found.</div>';
+            return;
+        }
+
+        let html = '<div class="providers-grid">';
+        services.forEach(provider => {
+            // Parse main services and subcategories
+            const mainServices = provider.main_service.split(',').map(s => s.trim());
+            const subcategories = provider.subcategories.split(',').map(s => s.trim());
+            
+            // Get first portfolio image if available
+            const portfolioImages = provider.portfolio ? provider.portfolio.split(',').map(s => s.trim()) : [];
+            const firstImage = portfolioImages.length > 0 ? portfolioImages[0] : '';
+            
+            // Filter services based on current category
+            const currentCategory = modalTitle.textContent.replace(' Services', '');
+            let filteredMainServices = mainServices;
+            let filteredSubcategories = subcategories;
+            
+            // If showing Painting services, filter to show only Painting main service and painting subcategories
+            if (currentCategory === 'Painting') {
+                filteredMainServices = mainServices.filter(service => 
+                    service.toLowerCase().includes('painting')
+                );
+                filteredSubcategories = subcategories.filter(sub => 
+                    sub.toLowerCase().includes('painting') || 
+                    sub.toLowerCase().includes('paint') ||
+                    sub.toLowerCase().includes('color') ||
+                    sub.toLowerCase().includes('mural') ||
+                    sub.toLowerCase().includes('waterproof') ||
+                    sub.toLowerCase().includes('damp')
+                );
+            }
+            // If showing Interior Design services, filter to show only Interior Design main service and interior subcategories
+            else if (currentCategory === 'Interior Design') {
+                filteredMainServices = mainServices.filter(service => 
+                    service.toLowerCase().includes('interior') || service.toLowerCase().includes('design')
+                );
+                filteredSubcategories = subcategories.filter(sub => 
+                    sub.toLowerCase().includes('interior design') ||
+                    sub.toLowerCase().includes('interior -') ||
+                    sub.toLowerCase().includes('ceiling & lighting') ||
+                    sub.toLowerCase().includes('space planning') ||
+                    sub.toLowerCase().includes('modular kitchen') ||
+                    sub.toLowerCase().includes('bathroom design') ||
+                    sub.toLowerCase().includes('carpentry & woodwork') ||
+                    sub.toLowerCase().includes('furniture design')
+                );
+            }
+            // If showing Restoration services, filter to show only Restoration main service and restoration subcategories
+            else if (currentCategory === 'Restoration') {
+                filteredMainServices = mainServices.filter(service => 
+                    service.toLowerCase().includes('restoration') || service.toLowerCase().includes('renovation')
+                );
+                filteredSubcategories = subcategories.filter(sub => 
+                    sub.toLowerCase().includes('restoration') || 
+                    sub.toLowerCase().includes('renovation') ||
+                    sub.toLowerCase().includes('repair') ||
+                    sub.toLowerCase().includes('plastering') ||
+                    sub.toLowerCase().includes('floor') ||
+                    sub.toLowerCase().includes('door') ||
+                    sub.toLowerCase().includes('window') ||
+                    sub.toLowerCase().includes('building') ||
+                    sub.toLowerCase().includes('transformation')
+                );
+            }
+            
+            // Only show the card if there are relevant services for this category
+            if (filteredMainServices.length > 0 || filteredSubcategories.length > 0) {
+                html += `
+                    <div class="provider-card">
+                        <div class="provider-header">
+                            <div>
+                                <h3 class="provider-name">
+                                    ${provider.provider_name}
+                                    <i class="fas fa-check-circle verified-badge" title="Verified Provider"></i>
+                                </h3>
+                            </div>
+                            <div class="provider-actions">
+                                <button class="btn-book-consultation" data-provider-id="${provider.provider_id || ''}" data-provider-name="${provider.provider_name}">Book Consultation</button>
+                                <button class="btn-request-quote" data-provider-id="${provider.provider_id || ''}" data-provider-name="${provider.provider_name}" data-service-type="${filteredMainServices[0] || ''}">Request a Quote</button>
+                            </div>
+                        </div>
+                        
+                        <div class="service-tags">
+                            ${filteredMainServices.map((service, index) => 
+                                `<span class="service-tag ${index === 0 ? 'primary' : 'secondary'}">${service}</span>`
+                            ).join('')}
+                            ${filteredSubcategories.map(sub => 
+                                `<span class="service-tag highlight">${sub}</span>`
+                            ).join('')}
+                        </div>
+
+                        <div class="contact-details">
+                            <p><strong>Email:</strong> ${provider.provider_email || 'Not provided'}</p>
+                            <p><strong>Phone:</strong> ${provider.provider_phone || 'Not provided'}</p>
+                            <p><strong>Address:</strong> ${provider.provider_address || 'Not provided'}</p>
+                        </div>
+                        
+                        ${(firstImage && firstImage !== '${firstImage}') ? `
+                            <div class="portfolio-section">
+                                <div class="portfolio-label">Portfolio:</div>
+                                <img src="assets/images/${firstImage}" alt="Portfolio" class="portfolio-image" onerror="this.style.display='none'">
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+        });
+        html += '</div>';
+        
+        serviceContent.innerHTML = html;
+        
+        // Add event listeners to the newly created buttons
+        addButtonEventListeners();
+
+        // Store selected main service and subcategory globally for quote modal
+        window.selectedServiceType = provider.main_service || '';
+        window.selectedSubcategory = '';
+
+        // If a subcategory is selected (from the UI), set it
+        if (typeof filteredSubcategories !== 'undefined' && filteredSubcategories.length === 1) {
+            window.selectedSubcategory = filteredSubcategories[0];
+        } else if (typeof filteredSubcategories !== 'undefined' && filteredSubcategories.length > 1) {
+            window.selectedSubcategory = 'All';
+        }
+    }
+    
+    // Function to add event listeners to modal buttons
+    function addButtonEventListeners() {
+        // Book Consultation buttons
+        const bookConsultationBtns = document.querySelectorAll('#serviceModal .btn-book-consultation');
+        bookConsultationBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const providerId = this.getAttribute('data-provider-id');
+                if (providerId && providerId !== '') {
+                    // Close the service modal
+                    modal.style.display = 'none';
+                    // Find the matching button in the main DOM and trigger its click
+                    const globalBtn = document.querySelector('.provider-actions .btn-book-consultation[data-provider-id="' + providerId + '"]');
+                    if (globalBtn) {
+                        globalBtn.click();
+                    } else {
+                        // fallback: directly call the booking modal logic
+                        let currentYear = new Date().getFullYear();
+                        let currentMonth = new Date().getMonth();
+                        var calendarStep = document.getElementById('calendarStep');
+                        var paymentStep = document.getElementById('paymentStep');
+                        var timeSlotsSection = document.getElementById('time-slots-section');
+                        var bookingModal = document.getElementById('bookingModal');
+                        if (calendarStep) calendarStep.style.display = '';
+                        if (paymentStep) paymentStep.style.display = 'none';
+                        if (timeSlotsSection) timeSlotsSection.style.display = 'none';
+                        if (bookingModal) {
+                            bookingModal.classList.add('active');
+                            bookingModal.style.display = 'block';
+                        }
+                        if (typeof renderRealTimeCalendar === 'function') {
+                            renderRealTimeCalendar(providerId, currentYear, currentMonth);
+                        }
+                        if (typeof updateMonthTitle === 'function') {
+                            updateMonthTitle(currentYear, currentMonth);
+                        }
+                        document.getElementById('prevMonthBtn').onclick = function() {
+                            currentMonth--;
+                            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+                            renderRealTimeCalendar(providerId, currentYear, currentMonth);
+                            updateMonthTitle(currentYear, currentMonth);
+                        };
+                        document.getElementById('nextMonthBtn').onclick = function() {
+                            currentMonth++;
+                            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+                            renderRealTimeCalendar(providerId, currentYear, currentMonth);
+                            updateMonthTitle(currentYear, currentMonth);
+                        };
+                    }
+                } else {
+                    alert('Provider information not available. Provider ID: ' + providerId);
+                }
+            });
+        });
+        
+        // Request Quote buttons
+        const requestQuoteBtns = document.querySelectorAll('#serviceModal .btn-request-quote');
+        requestQuoteBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const providerId = this.getAttribute('data-provider-id');
+                const providerName = this.getAttribute('data-provider-name');
+                // Only use the main service the customer is viewing/selecting
+                let serviceType = '';
+                if (this.hasAttribute('data-service-type')) {
+                    serviceType = this.getAttribute('data-service-type');
+                } else if (typeof selectedServiceTab !== 'undefined') {
+                    serviceType = selectedServiceTab;
+                }
+                window.selectedServiceType = serviceType;
+                console.log('Request Quote clicked - Provider ID:', providerId, 'Provider Name:', providerName, 'Service Type:', serviceType);
+                if (providerId && providerId !== '') {
+                    // Close the service modal
+                    modal.style.display = 'none';
+                    // Open quote request modal
+                    openQuoteModal(providerId, providerName, serviceType);
+                } else {
+                    alert('Provider information not available. Provider ID: ' + providerId);
+                }
+            });
+        });
+    }
+    
+    // Function to open booking modal
+        // REMOVE booking and quote modal openers from services page
+        // These modals should only be triggered from the provider list page, not here.
+        const bookingModal = document.getElementById('bookingModal');
+        const calendarStep = document.getElementById('calendarStep');
+        const paymentStep = document.getElementById('paymentStep');
+        const timeSlotsSection = document.getElementById('time-slots-section');
+        
+        // Reset modal content
+        calendarStep.style.display = 'block';
+        paymentStep.style.display = 'none';
+        timeSlotsSection.style.display = 'none';
+        
+        // Show modal
+        bookingModal.style.display = 'flex';
+        
+        // Add close functionality
+        const bookingCloseBtn = bookingModal.querySelector('.close-modal-btn');
+        bookingCloseBtn.onclick = function() {
+            bookingModal.style.display = 'none';
+        };
+        
+        // Close when clicking outside
+        window.onclick = function(event) {
+            if (event.target === bookingModal) {
+                bookingModal.style.display = 'none';
+            }
+        };
+        
+        // For now, show a simple message since we don't have the full calendar functionality
+        
+    // Function to open quote request modal
+    // REMOVE booking and quote modal openers from services page
+    // These modals should only be triggered from the provider list page, not here.
+        const quoteModal = document.getElementById('quoteRequestModal');
+        
+        // Show modal
+        quoteModal.style.display = 'flex';
+        
+        // Add close functionality
+        const quoteCloseBtn = quoteModal.querySelector('.close-modal-btn');
+        quoteCloseBtn.onclick = function() {
+            quoteModal.style.display = 'none';
+        };
+        
+        // Close when clicking outside
+        window.onclick = function(event) {
+            if (event.target === quoteModal) {
+                quoteModal.style.display = 'none';
+            }
+        };
+        
+        // Handle form submission
+        const quoteForm = document.getElementById('quotePreviewForm');
+        quoteForm.onsubmit = function(e) {
+            e.preventDefault();
+            const projectDescription = document.getElementById('previewProjectDescription').value;
+            const files = document.getElementById('previewUploadPhotos').files;
+            // Get selected main service and subcategory from modal context (assume these are set globally or in the modal)
+            let selectedService = window.selectedServiceType || '';
+            let selectedSubcategory = window.selectedSubcategory || '';
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('provider_id', providerId);
+            formData.append('provider_name', providerName);
+            formData.append('service_type', selectedService);
+            formData.append('subcategory', selectedSubcategory);
+            formData.append('project_description', projectDescription);
+            // Add files
+            for (let i = 0; i < files.length; i++) {
+                formData.append('photos[]', files[i]);
+            }
+            fetch('handlers/handle_quote_request.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Quote request submitted successfully!');
+                    quoteModal.style.display = 'none';
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error submitting quote request. Please try again.');
+                console.error('Error:', error);
+            });
+        };
+    
 </script>
 
-<script src="assets/js/services.js"></script>
+<script>
+// Modal and button variables (global scope)
+const modal = document.getElementById('serviceModal');
+const closeModal = document.querySelector('.close-service-modal');
+const modalTitle = document.getElementById('modalTitle');
+const serviceContent = document.getElementById('serviceContent');
+const getAllServicesBtn = document.getElementById('getAllServicesBtn');
+const getAllServicesBtnPainting = document.getElementById('getAllServicesBtnPainting');
+const getAllServicesBtnRestoration = document.getElementById('getAllServicesBtnRestoration');
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching for static service cards (not modal)
+    const serviceTabs = document.querySelectorAll('.service-tab');
+    const serviceCards = document.querySelectorAll('.service-card');
+    serviceTabs.forEach(function(tab) {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Remove active from all tabs and cards
+            serviceTabs.forEach(t => t.classList.remove('active'));
+            serviceCards.forEach(card => card.classList.remove('active'));
+            // Add active to clicked tab and matching card
+            tab.classList.add('active');
+            const service = tab.getAttribute('data-service');
+            const card = document.querySelector('.service-card[data-service="' + service + '"]');
+            if (card) card.classList.add('active');
+        });
+    });
+
+    // Get All Services buttons for Painting and Restoration (robust event handler)
+    if (getAllServicesBtnPainting) {
+        getAllServicesBtnPainting.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Remove active from all tabs and cards
+            serviceTabs.forEach(function(t) { t.classList.remove('active'); });
+            serviceCards.forEach(function(card) { card.classList.remove('active'); });
+            // Add active to Painting tab and card
+            var tab = document.querySelector('.service-tab[data-service="painting"]');
+            var card = document.querySelector('.service-card[data-service="painting"]');
+            if (tab) tab.classList.add('active');
+            if (card) card.classList.add('active');
+        });
+    }
+    if (getAllServicesBtnRestoration) {
+        getAllServicesBtnRestoration.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Remove active from all tabs and cards
+            serviceTabs.forEach(function(t) { t.classList.remove('active'); });
+            serviceCards.forEach(function(card) { card.classList.remove('active'); });
+            // Add active to Restoration tab and card
+            var tab = document.querySelector('.service-tab[data-service="restoration"]');
+            var card = document.querySelector('.service-card[data-service="restoration"]');
+            if (tab) tab.classList.add('active');
+            if (card) card.classList.add('active');
+        });
+    }
+});
+
+// Function to show services by category
+function showServicesByCategory(category) {
+    modalTitle.textContent = `${category} Services`;
+    serviceContent.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><br>Loading services...</div>';
+    modal.style.display = 'flex';
+    fetch(`get_services.php?action=get_services_by_category&category=${encodeURIComponent(category)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.services && data.services.length > 0) {
+                    displayServices(data.services);
+                } else {
+                    serviceContent.innerHTML = `<div class="error">No ${category} services found. Please check if providers are available for this category.</div>`;
+                }
+            } else {
+                serviceContent.innerHTML = '<div class="error">Error: ' + data.message + '</div>';
+            }
+        })
+        .catch(error => {
+            serviceContent.innerHTML = '<div class="error">Error loading services. Please try again.</div>';
+            console.error('Error:', error);
+        });
+}
+
+// Function to display services in the modal
+function displayServices(services) {
+    if (!services || services.length === 0) {
+        serviceContent.innerHTML = '<div class="error">No services found.</div>';
+        return;
+    }
+    let html = '<div class="providers-grid">';
+    services.forEach(provider => {
+        const mainServices = provider.main_service.split(',').map(s => s.trim());
+        const subcategories = provider.subcategories.split(',').map(s => s.trim());
+        const portfolioImages = provider.portfolio ? provider.portfolio.split(',').map(s => s.trim()) : [];
+        const firstImage = portfolioImages.length > 0 ? portfolioImages[0] : '';
+        const currentCategory = modalTitle.textContent.replace(' Services', '');
+        let filteredMainServices = mainServices;
+        let filteredSubcategories = subcategories;
+        if (currentCategory === 'Painting') {
+            filteredMainServices = mainServices.filter(service => service.toLowerCase().includes('painting'));
+            filteredSubcategories = subcategories.filter(sub =>
+                sub.toLowerCase().includes('painting') ||
+                sub.toLowerCase().includes('paint') ||
+                sub.toLowerCase().includes('color') ||
+                sub.toLowerCase().includes('mural') ||
+                sub.toLowerCase().includes('waterproof') ||
+                sub.toLowerCase().includes('damp')
+            );
+        } else if (currentCategory === 'Interior Design') {
+            filteredMainServices = mainServices.filter(service =>
+                service.toLowerCase().includes('interior') || service.toLowerCase().includes('design')
+            );
+            filteredSubcategories = subcategories.filter(sub =>
+                sub.toLowerCase().includes('interior design') ||
+                sub.toLowerCase().includes('interior -') ||
+                sub.toLowerCase().includes('ceiling & lighting') ||
+                sub.toLowerCase().includes('space planning') ||
+                sub.toLowerCase().includes('modular kitchen') ||
+                sub.toLowerCase().includes('bathroom design') ||
+                sub.toLowerCase().includes('carpentry & woodwork') ||
+                sub.toLowerCase().includes('furniture design')
+            );
+        } else if (currentCategory === 'Restoration') {
+            filteredMainServices = mainServices.filter(service =>
+                service.toLowerCase().includes('restoration') || service.toLowerCase().includes('renovation')
+            );
+            filteredSubcategories = subcategories.filter(sub =>
+                sub.toLowerCase().includes('restoration') ||
+                sub.toLowerCase().includes('renovation') ||
+                sub.toLowerCase().includes('repair') ||
+                sub.toLowerCase().includes('plastering') ||
+                sub.toLowerCase().includes('floor') ||
+                sub.toLowerCase().includes('door') ||
+                sub.toLowerCase().includes('window') ||
+                sub.toLowerCase().includes('building') ||
+                sub.toLowerCase().includes('transformation')
+            );
+        }
+        if (filteredMainServices.length > 0 || filteredSubcategories.length > 0) {
+            html += `
+                <div class="provider-card">
+                    <div class="provider-header">
+                        <div>
+                            <h3 class="provider-name">
+                                ${provider.provider_name}
+                                <i class="fas fa-check-circle verified-badge" title="Verified Provider"></i>
+                            </h3>
+                        </div>
+                        <div class="provider-actions">
+                            <button class="btn-book-consultation" data-provider-id="${provider.provider_id || ''}" data-provider-name="${provider.provider_name}">Book Consultation</button>
+                            <button class="btn-request-quote" data-provider-id="${provider.provider_id || ''}" data-provider-name="${provider.provider_name}" data-service-type="${filteredMainServices[0] || ''}">Request a Quote</button>
+                        </div>
+                    </div>
+                    <div class="service-tags">
+                        ${filteredMainServices.map((service, index) =>
+                            `<span class="service-tag ${index === 0 ? 'primary' : 'secondary'}">${service}</span>`
+                        ).join('')}
+                        ${filteredSubcategories.map(sub =>
+                            `<span class="service-tag highlight">${sub}</span>`
+                        ).join('')}
+                    </div>
+                    <div class="contact-details">
+                        <p><strong>Email:</strong> ${provider.provider_email || 'Not provided'}</p>
+                        <p><strong>Phone:</strong> ${provider.provider_phone || 'Not provided'}</p>
+                        <p><strong>Address:</strong> ${provider.provider_address || 'Not provided'}</p>
+                    </div>
+                    ${firstImage ? `
+                        <div class="portfolio-section">
+                            <div class="portfolio-label">Portfolio:</div>
+                            <img src="../public/assets/images/${firstImage}" alt="Portfolio" class="portfolio-image" onerror="this.style.display='none'">
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+    });
+    html += '</div>';
+    serviceContent.innerHTML = html;
+    addButtonEventListeners();
+}
+
+// Function to add event listeners to modal buttons
+function addButtonEventListeners() {
+    // Book Consultation buttons
+    const bookConsultationBtns = document.querySelectorAll('#serviceModal .btn-book-consultation');
+    bookConsultationBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const providerId = this.getAttribute('data-provider-id');
+            if (providerId && providerId !== '') {
+                modal.style.display = 'none';
+                // ...existing code for booking modal logic...
+            } else {
+                alert('Provider information not available. Provider ID: ' + providerId);
+            }
+        });
+    });
+    // Request Quote buttons
+    const requestQuoteBtns = document.querySelectorAll('#serviceModal .btn-request-quote');
+    requestQuoteBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const providerId = this.getAttribute('data-provider-id');
+            const providerName = this.getAttribute('data-provider-name');
+            let serviceType = '';
+            if (this.hasAttribute('data-service-type')) {
+                serviceType = this.getAttribute('data-service-type');
+            }
+            window.selectedServiceType = serviceType;
+            if (providerId && providerId !== '') {
+                modal.style.display = 'none';
+                // ...existing code for quote modal logic...
+            } else {
+                alert('Provider information not available. Provider ID: ' + providerId);
+            }
+        });
+    });
+}
+</script>
+
+<script src="assets/js/serviceprovider.js"></script>
 <?php 
 include 'footer.php'; 
 ?>
