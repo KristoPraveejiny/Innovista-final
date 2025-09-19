@@ -58,7 +58,7 @@ if (!isset($_SESSION['profile_image_path'])) {
 // --- Customer-specific navigation links ---
 $navLinks = [
     ['href' => 'customer_dashboard.php', 'icon' => 'fas fa-tachometer-alt', 'text' => 'Dashboard'],
-    ['href' => 'request_quotation.php', 'icon' => 'fas fa-file-signature', 'text' => 'New Quote'],
+    
     ['href' => 'my_projects.php', 'icon' => 'fas fa-tasks', 'text' => 'My Projects'],
     ['href' => 'payment_history.php', 'icon' => 'fas fa-receipt', 'text' => 'Payments'],
     ['href' => 'my_orders.php', 'icon' => 'fas fa-box', 'text' => 'My Orders'], // updated icon

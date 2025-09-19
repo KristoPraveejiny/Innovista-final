@@ -187,13 +187,10 @@ $orders_awaiting_balance_query = $conn->prepare("
     <div class="dashboard-section">
         <h3>What would you like to do?</h3>
         <div class="quick-access-grid">
-            <a href="request_quotation.php" class="access-card"><i class="fas fa-file-signature"></i><span>Request a New Quote</span></a>
+           
             <a href="../public/services.php" class="access-card"><i class="fas fa-search"></i><span>Search for Services</span></a>
             <a href="../public/product.php" class="access-card"><i class="fas fa-shopping-cart"></i><span>Purchase Products</span></a>
-            <a href="my_profile.php" class="access-card"><i class="fas fa-user-edit"></i><span>Manage My Profile</span></a>
-            <a href="my_projects.php" class="access-card"><i class="fas fa-project-diagram"></i><span>My Projects & Quotes</span></a>
-            <a href="payment_history.php" class="access-card"><i class="fas fa-history"></i><span>Payment History</span></a>
-            <a href="my_orders.php" class="access-card"><i class="fas fa-box"></i><span>My Orders</span></a> 
+            
         </div>
     </div>
 
