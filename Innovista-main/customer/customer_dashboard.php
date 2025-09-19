@@ -303,4 +303,6 @@ $orders_awaiting_balance_query = $conn->prepare("
     </div>
 </div>
 </main>
+
+
 <?php require_once '../includes/user_dashboard_footer.php'; ?>

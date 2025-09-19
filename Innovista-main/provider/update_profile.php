@@ -6,7 +6,7 @@ protectPage('provider');
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_details']) || isset($_POST['update_services']))) {
     $provider_id = $_SESSION['user_id'];
     $company_name = $_POST['company_name'] ?? '';
-    $email = $_POST['email'] ?? '';
+    // Email is now read-only, so we don't process it from POST data
     $phone = $_POST['phone'] ?? '';
     $bio = $_POST['bio'] ?? '';
     $provider_bio = $_POST['provider_bio'] ?? '';
@@ -38,8 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_details']) ||
     $db = (new Database())->getConnection();
 
     $updateUserTable = false;
-    // If email or address (bio) is changed, update both tables
-    if (isset($_POST['email']) || isset($_POST['bio'])) {
+    // If address (bio) is changed, update both tables (email is now read-only)
+    if (isset($_POST['bio'])) {
         $updateUserTable = true;
     }
 
@@ -54,9 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_details']) ||
         header('Location: my_profile.php');
         exit();
     } else {
-        $stmt = $db->prepare('UPDATE service SET provider_name = :company_name, provider_email = :email, provider_phone = :phone, provider_address = :bio, provider_bio = :provider_bio WHERE provider_id = :provider_id');
+        $stmt = $db->prepare('UPDATE service SET provider_name = :company_name, provider_phone = :phone, provider_address = :bio, provider_bio = :provider_bio WHERE provider_id = :provider_id');
         $stmt->bindParam(':company_name', $company_name);
-        $stmt->bindParam(':email', $email);
         $stmt->bindParam(':phone', $phone);
         $stmt->bindParam(':bio', $bio);
         $stmt->bindParam(':provider_bio', $provider_bio);
@@ -64,11 +63,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_details']) ||
         $stmt->execute();
     }
 
-    // Update user table only if email or address (bio) is changed
+    // Update user table only if address (bio) is changed (email is now read-only)
     if ($updateUserTable) {
-        $stmt2 = $db->prepare('UPDATE users SET name = :company_name, email = :email WHERE id = :provider_id');
+        $stmt2 = $db->prepare('UPDATE users SET name = :company_name WHERE id = :provider_id');
         $stmt2->bindParam(':company_name', $company_name);
-        $stmt2->bindParam(':email', $email);
         $stmt2->bindParam(':provider_id', $provider_id);
         $stmt2->execute();
     }

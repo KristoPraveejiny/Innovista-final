@@ -448,21 +448,9 @@ document.addEventListener('DOMContentLoaded', () => {
             serviceNavItems.forEach(i => i.classList.remove('active'));
             item.classList.add('active');
 
-            // Hide all product sections, then activate the current one
-            productSections.forEach(section => section.classList.remove('active'));
-            document.getElementById(`${service}-section`).classList.add('active');
-
-            // Show/hide category filter block
-            if (service === 'interior-design' || service === 'restoration') { 
-                categoryFilterBlock.style.display = 'block';
-                currentCategory = document.querySelector('.category-list .category-item.active')?.dataset.category || 'all';
-                filterAndRenderProducts(); // Call rendering for these sections
-            } else { // Painting has its own brand/color logic
-                categoryFilterBlock.style.display = 'none';
-                renderPaintingBrandsGrid();
-                // Painting tools are already in HTML, just ensure they are part of the active section
-                if (paintingToolsGrid) paintingToolsGrid.style.display = 'grid'; // Ensure tools grid is visible
-            }
+            // For dynamic content, just reload the page with the new service parameter
+            const currentCategory = document.querySelector('.category-list .category-item.active')?.dataset.category || 'all';
+            window.location.href = `?service=${service}&category=${currentCategory}`;
         });
     });
 
@@ -475,7 +463,9 @@ document.addEventListener('DOMContentLoaded', () => {
             categoryItems.forEach(i => i.classList.remove('active'));
             item.classList.add('active');
 
-            filterAndRenderProducts(); // Re-filter current section
+            // For dynamic content, just reload the page with the new category parameter
+            const currentService = document.querySelector('.service-nav .nav-item.active')?.dataset.service || 'interior-design';
+            window.location.href = `?service=${currentService}&category=${currentCategory}`;
         });
     });
 

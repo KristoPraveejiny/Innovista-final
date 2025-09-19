@@ -1,3 +1,13 @@
+/* Customer Dashboard Profile Image Styles */
+.user-welcome a {
+    text-decoration: none;
+    display: inline-block;
+}
+
+.user-welcome a:hover {
+    text-decoration: none;
+}
+
 /* Flash message styles for profile update */
 /* Improved flash message for better visibility */
 .flash-message-container {

@@ -65,6 +65,8 @@ body {
     z-index: 1000;
     transition: transform 0.3s ease-in-out;
     box-shadow: var(--shadow-md);
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .sidebar-header {
@@ -129,11 +131,27 @@ body {
     padding: 1rem 0;
     margin-top: auto;
     border-top: 1px solid #334155;
+    position: sticky;
+    bottom: 0;
+    background-color: var(--sidebar-bg);
+    z-index: 10;
 }
 
 .sidebar-footer .nav-link {
     padding-top: 0.8rem;
     padding-bottom: 0.8rem;
+}
+
+.sidebar-footer .nav-link.logout {
+    color: #ef4444;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.sidebar-footer .nav-link.logout:hover {
+    color: #ffffff;
+    background-color: #ef4444;
+    transform: translateX(5px);
 }
 
 /* --- Main Content Area --- */

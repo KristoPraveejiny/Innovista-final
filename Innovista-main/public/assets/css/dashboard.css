@@ -202,6 +202,31 @@ body.user-dashboard-body {
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
+.dashboard-avatar-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.dashboard-avatar-img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.dashboard-user-profile a {
+    text-decoration: none;
+    display: inline-block;
+}
+
+.dashboard-user-profile a:hover {
+    text-decoration: none;
+}
+
 /* --- Notification Bell Styling --- */
 .notification-bell-wrapper {
     position: relative;

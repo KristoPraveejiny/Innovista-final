@@ -54,8 +54,21 @@ $userClass = new User($conn);
 $loggedInUser = $userClass->login($email, $password);
 
 if ($loggedInUser) {
-    // Authentication successful
-    // Set session variables
+    // Check provider status BEFORE setting session data
+    if ($loggedInUser['role'] === 'provider') {
+        if ($loggedInUser['provider_status'] === 'pending') {
+            set_flash_message('info', 'Your provider account is pending approval. Please wait for an administrator to review it.');
+            header('Location: ../public/login.php');
+            exit();
+        } elseif ($loggedInUser['provider_status'] === 'rejected' || $loggedInUser['provider_status'] === 'inactive') {
+            set_flash_message('error', 'Your provider account is currently inactive or rejected. Please contact support.');
+            header('Location: ../public/login.php');
+            exit();
+        }
+        // Only approved providers continue to session setup
+    }
+    
+    // Authentication successful - Set session variables only for approved users
     $_SESSION['user_id'] = $loggedInUser['id'];
     $_SESSION['user_name'] = $loggedInUser['name'];
     $_SESSION['user_role'] = $loggedInUser['role'];
@@ -69,22 +82,10 @@ if ($loggedInUser) {
     if ($loggedInUser['role'] === 'admin') {
         header('Location: ../admin/admin_dashboard.php');
     } elseif ($loggedInUser['role'] === 'provider') {
-        // This is the CRITICAL block to check
-        if ($loggedInUser['provider_status'] === 'approved') {
-            // THE PROBLEM IS HERE! THIS PATH IS LIKELY STILL WRONG.
-            // It should be relative from /handlers/ to /provider/
-            header('Location: ../provider/provider_dashboard.php'); // Ensure this is '../provider/' NOT '../public/provider/'
-        } elseif ($loggedInUser['provider_status'] === 'pending') {
-            set_flash_message('info', 'Your provider account is pending approval. Please wait for an administrator to review it.');
-            header('Location: ../public/index.php'); // This path is correct
-        } else { // rejected or inactive
-            set_flash_message('error', 'Your provider account is currently inactive or rejected. Please contact support.');
-            header('Location: ../public/login.php'); // This path is correct
-        }
+        // Provider is already approved (checked above)
+        header('Location: ../provider/provider_dashboard.php');
     } else { // Default to customer dashboard for 'customer' role
-        // This is also a CRITICAL block to check
-        // It should be relative from /handlers/ to /customer/
-        header('Location: ../customer/customer_dashboard.php'); // Ensure this is '../customer/' NOT '../public/customer/'
+        header('Location: ../customer/customer_dashboard.php');
     }
     exit();
 

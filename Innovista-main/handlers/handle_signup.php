@@ -29,12 +29,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
+// Check if OTP verification is required and completed
+$otpVerified = filter_input(INPUT_POST, 'otpVerified', FILTER_SANITIZE_STRING);
+if ($otpVerified !== 'true') {
+    // This should not happen with the new modal flow, but keep as safety check
+    set_flash_message('error', 'Please verify your email address with OTP before completing registration.');
+    header('Location: ../public/signup.php');
+    exit();
+}
+
 // Store submitted data in session for re-filling form on error
 $_SESSION['signup_data'] = $_POST;
 // Clear subcategories from session if it's an array for proper re-encoding later
-if (isset($_SESSION['signup_data']['providerSubcategories']) && is_array($_SESSION['signup_data']['providerSubcategories'])) {
-    $_SESSION['signup_data']['providerSubcategories'] = $_SESSION['signup_data']['providerSubcategories']; // Keep as array for JS
-}
+// This line ensures the array is properly maintained for JavaScript processing
 
 
 // Get the user type ('customer' or 'provider')
@@ -200,8 +207,9 @@ try {
         }
     }
     
-    // Clear signup data from session after successful registration
+    // Clear signup data and OTP from session after successful registration
     unset($_SESSION['signup_data']);
+    unset($_SESSION['signup_otp']);
 
     $conn->commit(); // Commit the transaction
     set_flash_message('success', 'Registration successful! You can now log in.');

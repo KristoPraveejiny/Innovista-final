@@ -48,6 +48,20 @@ $stmt->execute();
 $row = $stmt->fetch(PDO::FETCH_ASSOC);
 $open_disputes_count = $row['total'];
 
+// 6. Total Products count
+$total_products = 0;
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM products WHERE status = 'active'");
+$stmt->execute();
+$row = $stmt->fetch(PDO::FETCH_ASSOC);
+$total_products = $row['total'];
+
+// 7. Low Stock Products count (less than 10 items)
+$low_stock_products = 0;
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM products WHERE stock_quantity < 10 AND status = 'active'");
+$stmt->execute();
+$row = $stmt->fetch(PDO::FETCH_ASSOC);
+$low_stock_products = $row['total'];
+
 // 6. Total Services
 $total_services = 0;
 $stmt = $conn->prepare("SELECT COUNT(*) as total FROM service");
@@ -164,6 +178,24 @@ try {
         </div>
     </div>
     <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(45deg, #8e44ad, #a569bd);">
+            <i class="fas fa-shopping-bag"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Total Products</h4>
+            <p><?php echo $total_products; ?></p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(45deg, #f39c12, #f5b041);">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-info">
+            <h4>Low Stock</h4>
+            <p><?php echo $low_stock_products; ?></p>
+        </div>
+    </div>
+    <div class="stat-card">
         <div class="stat-icon" style="background: linear-gradient(45deg, #9b59b6, #af7ac5);">
             <i class="fas fa-images"></i>
         </div>
@@ -201,6 +233,10 @@ try {
         <a href="manage_portfolio_items.php" class="access-card">
             <i class="fas fa-images"></i>
             <span>Portfolio Items</span>
+        </a>
+        <a href="manage_products.php" class="access-card">
+            <i class="fas fa-shopping-bag"></i>
+            <span>Manage Products</span>
         </a>
         <a href="reports.php" class="access-card">
             <i class="fas fa-chart-bar"></i>
