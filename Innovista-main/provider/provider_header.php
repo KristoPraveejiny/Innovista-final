@@ -138,7 +138,7 @@
                     </button>
                     <div class="dashboard-user-profile">
                         <span>Welcome, <?php echo $_SESSION['user_name'] ?? 'Provider'; ?></span>
-                        <i class="fas fa-user-circle dashboard-avatar-sm"></i>
+                        <!-- <i class="fas fa-user-circle dashboard-avatar-sm"></i> -->
                     </div>
                 </div>
                 <div class="header-right">

@@ -59,6 +59,9 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
                 <a href="manage_portfolio_items.php" class="nav-link <?php if($currentPage == 'manage_portfolio_items.php') echo 'active'; ?>">
                     <i class="fas fa-images"></i><span>Portfolio Items</span>
                 </a>
+                <a href="manage_products.php" class="nav-link <?php if($currentPage == 'manage_products.php') echo 'active'; ?>">
+                    <i class="fas fa-shopping-bag"></i><span>Manage Products</span>
+                </a>
                 <a href="reports.php" class="nav-link <?php if($currentPage == 'reports.php') echo 'active'; ?>">
                     <i class="fas fa-chart-bar"></i><span>Reports</span>
                 </a>

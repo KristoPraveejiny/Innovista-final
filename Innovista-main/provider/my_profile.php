@@ -46,8 +46,11 @@ if (!$provider) {
                 <input type="text" id="company_name" name="company_name" value="<?php echo htmlspecialchars($provider['provider_name'] ?? ''); ?>" required autocomplete="organization" placeholder="e.g. Daniel Company or John Doe">
             </div>
             <div class="form-group-pro">
-                <label for="email">Email <span class="required">*</span></label>
-                <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($provider['provider_email'] ?? ''); ?>" required autocomplete="email" placeholder="e.g. daniel@email.com">
+                <label for="email">Email</label>
+                <div class="readonly-field" style="padding: 12px 16px; background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; color: #495057; font-weight: 500;">
+                    <i class="fas fa-envelope" style="margin-right: 8px; color: #6c757d;"></i>
+                    <?php echo htmlspecialchars($provider['provider_email'] ?? 'No email set'); ?>
+                </div>
             </div>
             <div class="form-group-pro">
                 <label for="phone">Phone Number</label>

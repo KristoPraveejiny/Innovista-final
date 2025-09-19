@@ -3,6 +3,24 @@
 $pageTitle = 'Shop Products'; 
 // Include the master header, which also starts the session
 include 'header.php'; 
+
+// Include database and product class
+require_once '../config/Database.php';
+require_once '../classes/Product.php';
+
+// Initialize database connection and product class
+$database = new Database();
+$conn = $database->getConnection();
+$productClass = new Product($conn);
+
+// Get filter parameters
+$service_type = $_GET['service'] ?? 'interior-design';
+$category = $_GET['category'] ?? 'all';
+
+// Fetch products based on filters
+$products = $productClass->getAllProducts($service_type, $category);
+$categories = $productClass->getCategories();
+$service_types = $productClass->getServiceTypes();
 ?>
 
 <!-- =========================================
@@ -24,132 +42,135 @@ include 'header.php';
         <div class="sidebar-block">
             <h3 class="sidebar-title">Service Type</h3>
             <nav class="service-nav">
-                <a href="#" class="nav-item active" data-service="interior-design"><i class="fas fa-home"></i> Interior Design</a>
-                <a href="#" class="nav-item" data-service="painting"><i class="fas fa-paint-brush"></i> Painting</a>
-                <a href="#" class="nav-item" data-service="restoration"><i class="fas fa-tools"></i> Restoration</a>
+                <a href="?service=interior-design&category=<?php echo $category; ?>" class="nav-item <?php echo $service_type === 'interior-design' ? 'active' : ''; ?>" data-service="interior-design"><i class="fas fa-home"></i> Interior Design</a>
+                <a href="?service=painting&category=<?php echo $category; ?>" class="nav-item <?php echo $service_type === 'painting' ? 'active' : ''; ?>" data-service="painting"><i class="fas fa-paint-brush"></i> Painting</a>
+                <a href="?service=restoration&category=<?php echo $category; ?>" class="nav-item <?php echo $service_type === 'restoration' ? 'active' : ''; ?>" data-service="restoration"><i class="fas fa-tools"></i> Restoration</a>
             </nav>
         </div>
         <div class="sidebar-block" id="category-filter-block">
             <h3 class="sidebar-title">Browse by Category</h3>
             <div class="category-list">
-                <a href="#" class="category-item active" data-category="all">All Products</a>
-                <a href="#" class="category-item" data-category="furniture">Furniture</a>
-                <a href="#" class="category-item" data-category="lighting">Lighting</a>
-                <a href="#" class="category-item" data-category="bath">Bathroom</a>
-                <a href="#" class="category-item" data-category="kitchen">Kitchen</a>
+                <a href="?service=<?php echo $service_type; ?>&category=all" class="category-item <?php echo $category === 'all' ? 'active' : ''; ?>" data-category="all">All Products</a>
+                <?php foreach ($categories as $cat): ?>
+                    <a href="?service=<?php echo $service_type; ?>&category=<?php echo $cat; ?>" class="category-item <?php echo $category === $cat ? 'active' : ''; ?>" data-category="<?php echo $cat; ?>"><?php echo ucfirst($cat); ?></a>
+                <?php endforeach; ?>
             </div>
         </div>
     </aside>
 
     <!-- Main Product Area -->
     <div class="product-area">
-        <!-- Interior Design Section -->
-        <section class="product-section active" id="interior-design-section">
+        <!-- Dynamic Product Section -->
+        <section class="product-section active" id="product-section">
             <div class="section-header">
-                <h2>Interior Design Collection</h2>
-                <p>Premium furnishings and materials curated for sophisticated living spaces.</p>
+                <h2><?php echo ucfirst(str_replace('-', ' ', $service_type)); ?> Collection</h2>
+                <p>
+                    <?php 
+                    switch($service_type) {
+                        case 'interior-design':
+                            echo 'Premium furnishings and materials curated for sophisticated living spaces.';
+                            break;
+                        case 'painting':
+                            echo 'Select a brand to get started, then choose your project type and color.';
+                            break;
+                        case 'restoration':
+                            echo 'Everything you need to bring your treasured items back to life.';
+                            break;
+                        default:
+                            echo 'Discover premium materials and furnishings for all your needs.';
+                    }
+                    ?>
+                </p>
             </div>
-            <div class="product-grid">
-                <!-- Furniture -->
-                <div class="product-item" data-category="furniture">
-                    <div class="product-image"><img src="assets/images/images/modern-living-room-sofa.jpg" alt="Sofa"><div class="product-badge premium">Premium</div></div>
-                    <div class="product-details"><p class="brand-name">Pottery Barn</p><h4>Buchanan Upholstered Sofa</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.8)</span></div><div class="price-section"><span class="price">Rs. 1,19,900</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
+            
+            <?php if ($service_type === 'painting'): ?>
+                <!-- Painting Section - Show actual products from database -->
+                <div class="product-grid">
+                    <?php if (empty($products)): ?>
+                        <div class="no-products">
+                            <h3>No painting products found</h3>
+                            <p>Try running the SQL query to add painting products, or check back later for new products.</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($products as $product): ?>
+                            <div class="product-item" data-category="<?php echo $product['category']; ?>" data-product-id="<?php echo $product['id']; ?>">
+                                <div class="product-image">
+                                    <img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" 
+                                         onerror="this.src='assets/images/placeholder.jpg'">
+                                    <?php if ($product['badge']): ?>
+                                        <div class="product-badge <?php echo $product['badge_type'] ?? ''; ?>"><?php echo htmlspecialchars($product['badge']); ?></div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="product-details">
+                                    <p class="brand-name"><?php echo htmlspecialchars($product['brand']); ?></p>
+                                    <h4><?php echo htmlspecialchars($product['name']); ?></h4>
+                                    <div class="product-rating"><?php echo Product::generateStarRating($product['rating']); ?></div>
+                                    <div class="price-section">
+                                        <span class="price"><?php echo Product::formatPrice($product['price']); ?></span>
+                                        <button class="btn-add-cart" data-product-id="<?php echo $product['id']; ?>">
+                                            <i class="fas fa-shopping-cart"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
-                <!-- Lighting -->
-                <div class="product-item" data-category="lighting">
-                    <div class="product-image"><img src="assets/images/images/modern-table-lamp.jpg" alt="Lamp"><div class="product-badge">Modern</div></div>
-                    <div class="product-details"><p class="brand-name">LightLux</p><h4>Modern Table Lamp</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><span>(4.7)</span></div><div class="price-section"><span class="price">Rs. 8,500</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
+            <?php else: ?>
+                <!-- Regular Product Grid -->
+                <div class="product-grid">
+                    <?php if (empty($products)): ?>
+                        <div class="no-products">
+                            <h3>No products found</h3>
+                            <p>Try adjusting your filters or check back later for new products.</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($products as $product): ?>
+                            <div class="product-item" data-category="<?php echo $product['category']; ?>" data-product-id="<?php echo $product['id']; ?>">
+                                <div class="product-image">
+                                    <img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" 
+                                         onerror="this.src='assets/images/placeholder.jpg'">
+                                    <?php if ($product['badge']): ?>
+                                        <div class="product-badge <?php echo $product['badge_type'] ?? ''; ?>"><?php echo htmlspecialchars($product['badge']); ?></div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="product-details">
+                                    <p class="brand-name"><?php echo htmlspecialchars($product['brand']); ?></p>
+                                    <h4><?php echo htmlspecialchars($product['name']); ?></h4>
+                                    <div class="product-rating"><?php echo Product::generateStarRating($product['rating']); ?></div>
+                                    <div class="price-section">
+                                        <span class="price"><?php echo Product::formatPrice($product['price']); ?></span>
+                                        <button class="btn-add-cart" data-product-id="<?php echo $product['id']; ?>">
+                                            <i class="fas fa-shopping-cart"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
-                <!-- Bathroom -->
-                <div class="product-item" data-category="bath">
-                    <div class="product-image"><img src="assets/images/images/bathroom 11.webp" alt="Bathroom Sink"><div class="product-badge">Elegant</div></div>
-                    <div class="product-details"><p class="brand-name">AquaLux</p><h4>Elegant Vanity Sink</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.9)</span></div><div class="price-section"><span class="price">Rs. 26,500</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
-                </div>
-                <!-- Kitchen -->
-                 <div class="product-item" data-category="kitchen">
-                    <div class="product-image"><img src="assets/images/images/kitchen-cabinet-1.jpg" alt="Kitchen Cabinets"><div class="product-badge">Modern</div></div>
-                    <div class="product-details"><p class="brand-name">KitchenCraft</p><h4>Modern Cabinet Set</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><span>(4.2)</span></div><div class="price-section"><span class="price">Rs. 85,000</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
-                </div>
-                 <!-- More Furniture -->
-                <div class="product-item" data-category="furniture">
-                    <div class="product-image"><img src="assets/images/images/contemporary-bed-frame.jpg" alt="Bed Frame"><div class="product-badge">Popular</div></div>
-                    <div class="product-details"><p class="brand-name">BedLux</p><h4>Contemporary Bed Frame</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><span>(4.6)</span></div><div class="price-section"><span class="price">Rs. 28,500</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
-                </div>
-                <!-- More Lighting -->
-                <div class="product-item" data-category="lighting">
-                    <div class="product-image"><img src="assets/images/images/luxury-ceiling-light.jpg" alt="Ceiling Light"><div class="product-badge premium">Luxury</div></div>
-                    <div class="product-details"><p class="brand-name">LightLux</p><h4>Luxury Ceiling Fixture</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.9)</span></div><div class="price-section"><span class="price">Rs. 28,500</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
-                </div>
-            </div>
+            <?php endif; ?>
         </section>
 
-        <!-- Painting Section -->
-        <section class="product-section" id="painting-section">
-            <div class="section-header">
-                <h2>Painting Brands</h2>
-                <p>Select a brand to get started, then choose your project type and color.</p>
-            </div>
-            <div id="painting-brand-grid" class="brand-grid">
-                <!-- Brand cards will be rendered by JS -->
-            </div>
-            <div id="painting-color-panel" class="color-panel" style="display:none;">
-                <button id="back-to-brands" class="btn btn-secondary" style="margin-bottom:1rem;">&larr; Back to Brands</button>
-                <div id="paint-type-select-block" class="paint-type-select-block" style="margin-bottom:1.5rem; display:none;">
-                    <label for="paintTypeSelect" style="font-weight:600; margin-right:8px;">Paint Type:</label>
-                    <select id="paintTypeSelect" style="padding:6px 12px; border-radius:4px; border:1px solid #ccc;">
-                        <option value="" selected disabled>Select paint type...</option>
-                        <option value="Flat">Flat (Ceilings, Interior walls)</option>
-                        <option value="Matte">Matte (Interior walls, Bedrooms)</option>
-                        <option value="Eggshell">Eggshell (Interior walls)</option>
-                        <option value="Satin">Satin (Bathrooms, Kitchens, Outdoor surfaces)</option>
-                        <option value="Semi-gloss">Semi-gloss (Trim, Doors, Cabinets, Wood furniture)</option>
-                        <option value="Gloss">Gloss (Doors, Trim, Furniture)</option>
-                        <option value="High-gloss">High-gloss (Accent trim, Furniture)</option>
-                        <option value="Pearl">Pearl (Decorative walls)</option>
-                        <option value="Silk">Silk (Living rooms, Bedrooms)</option>
-                        <option value="Velvet">Velvet (Feature walls)</option>
-                        <option value="Enamel">Enamel (Metal, Wood, High-traffic areas)</option>
-                        <option value="Acrylic">Acrylic (General purpose, Walls, Ceilings)</option>
-                        <option value="Oil-based">Oil-based (Trim, Doors, Metal)</option>
-                        <option value="Latex">Latex (Walls, Ceilings)</option>
-                    </select>
-                </div>
-                <h3 id="color-panel-title"></h3>
-                <div id="painting-color-grid" class="color-grid"></div>
-            </div>
-        </section>
-
-        <!-- Restoration Section -->
-        <section class="product-section" id="restoration-section">
-             <div class="section-header">
-                <h2>Restoration Materials</h2>
-                <p>Everything you need to bring your treasured items back to life.</p>
-            </div>
-            <div class="product-grid">
-                <!-- Restoration Product 1 -->
-                <div class="product-item">
-                    <div class="product-image"><img src="https://images.unsplash.com/photo-1595431658650-47759b855543?q=80&w=300" alt="Wood Polish"><div class="product-badge">Wood Care</div></div>
-                    <div class="product-details"><p class="brand-name">RestorePro</p><h4>Premium Wood Polish</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.9)</span></div><div class="price-section"><span class="price">Rs. 1,200</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
-                </div>
-                <!-- Restoration Product 2 -->
-                <div class="product-item">
-                    <div class="product-image"><img src="https://images.unsplash.com/photo-1589939705384-5185137a7f0f?q=80&w=300" alt="Metal Cleaner"><div class="product-badge">Metal Care</div></div>
-                    <div class="product-details"><p class="brand-name">MetalCare</p><h4>Metal Restoration Kit</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><span>(4.5)</span></div><div class="price-section"><span class="price">Rs. 2,800</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
-                </div>
-                <!-- Restoration Product 3 -->
-                <div class="product-item">
-                    <div class="product-image"><img src="https://images.unsplash.com/photo-1600585152220-0320f7f3a9d4?q=80&w=300" alt="Stone Sealer"><div class="product-badge">Stone Care</div></div>
-                    <div class="product-details"><p class="brand-name">StoneGuard</p><h4>Stone Sealer & Protector</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><span>(4.4)</span></div><div class="price-section"><span class="price">Rs. 3,500</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
-                </div>
-                <!-- Restoration Product 4 -->
-                <div class="product-item">
-                    <div class="product-image"><img src="https://images.unsplash.com/photo-1556912173-356c3383a54b?q=80&w=300" alt="Restoration Tools"><div class="product-badge">Tools</div></div>
-                    <div class="product-details"><p class="brand-name">ToolMaster</p><h4>Professional Tool Set</h4><div class="product-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><span>(4.8)</span></div><div class="price-section"><span class="price">Rs. 5,500</span><button class="btn-add-cart"><i class="fas fa-shopping-cart"></i></button></div></div>
-                </div>
-            </div>
-        </section>
     </div>
 </main>
+
+<style>
+.no-products {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.no-products h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.no-products p {
+    font-size: 16px;
+}
+</style>
 
 <!-- =========================================
      MODALS AND CART

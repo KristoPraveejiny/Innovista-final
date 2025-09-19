@@ -69,7 +69,7 @@ function getImageSrc(mixed $rawImagePath): string {
 
     // --- Step 2: Handle empty path after type conversion ---
     if (empty($imagePath)) {
-        return htmlspecialchars('assets/images/placeholder.jpg'); // Return a generic placeholder if path is empty
+        return htmlspecialchars('assets/images/default-avatar.jpg'); // Return a generic placeholder if path is empty
     }
 
     // --- Step 3: Determine if it's a URL or relative path ---

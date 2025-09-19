@@ -11,7 +11,10 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 if (!function_exists('isUserLoggedIn')) {
-    require_once '../public/session.php'; // Defines helper functions
+    require_once '../config/session.php'; // Defines basic session functions
+}
+if (!function_exists('getImageSrc')) {
+    require_once '../public/session.php'; // Defines getImageSrc function
 }
 if (!function_exists('protectPage')) { // Define protectPage if not already defined (e.g., in session.php)
     function protectPage(string $requiredRole): void {
@@ -33,26 +36,33 @@ $loggedInUserRole = getUserRole(); // Get the actual role from session
 $loggedInUserName = htmlspecialchars($_SESSION['user_name'] ?? 'Customer'); // Fallback name for display
 $currentPage = basename($_SERVER['SCRIPT_NAME']); // e.g., 'customer_dashboard.php'
 
-// Get user's profile image path for the header (assuming getImageSrc is in session.php)
-// $profile_image_path = getImageSrc($_SESSION['profile_image_path'] ?? 'assets/images/default-avatar.jpg');
-// You need to ensure $_SESSION['profile_image_path'] is set during login for this.
-// If not, fetch it here:
-if (!isset($_SESSION['profile_image_path'])) {
-    require_once '../config/Database.php';
-    $db_conn = (new Database())->getConnection();
-    $stmt_profile = $db_conn->prepare("SELECT profile_image_path FROM users WHERE id = :id");
-    
-    // FIX: Assign getUserId() to a variable first
-    $current_user_id = getUserId(); 
-    $stmt_profile->bindParam(':id', $current_user_id, PDO::PARAM_INT); // Use the variable
-    
-    $stmt_profile->execute();
-    $profile_img_row = $stmt_profile->fetch(PDO::FETCH_ASSOC);
-    if ($profile_img_row && $profile_img_row['profile_image_path']) {
-        $_SESSION['profile_image_path'] = $profile_img_row['profile_image_path'];
-        // $profile_image_path = getImageSrc($profile_img_row['profile_image_path']);
-    }
+// Get user's profile image path for the header
+$profile_image_path = 'assets/images/default-avatar.jpg'; // Default fallback
+
+// Fetch from database
+require_once '../config/Database.php';
+$db_conn = (new Database())->getConnection();
+$stmt_profile = $db_conn->prepare("SELECT profile_image_path FROM users WHERE id = :id");
+
+$current_user_id = getUserId(); 
+$stmt_profile->bindParam(':id', $current_user_id, PDO::PARAM_INT);
+$stmt_profile->execute();
+$profile_img_row = $stmt_profile->fetch(PDO::FETCH_ASSOC);
+
+if ($profile_img_row && !empty($profile_img_row['profile_image_path'])) {
+    $profile_image_path = $profile_img_row['profile_image_path'];
+    error_log("Header Debug - Found profile image in DB: " . $profile_image_path);
+} else {
+    error_log("Header Debug - No profile image found in DB");
 }
+
+// Use getImageSrc function to get the proper image URL
+$profile_image_path = getImageSrc($profile_image_path);
+
+// Add cache-busting parameter to ensure fresh image loads
+$profile_image_path .= '?v=' . time();
+
+error_log("Header Debug - Final profile image path: " . $profile_image_path);
 
 
 // --- Customer-specific navigation links ---
@@ -123,7 +133,12 @@ $navLinks = [
                     </button>
                     <div class="user-welcome">
                         <span>Welcome, <?php echo $loggedInUserName; ?></span>
-                        <img src="<?php echo htmlspecialchars($profile_image_path); ?>" alt="User Avatar" class="dashboard-avatar-sm">
+                        <a href="my_profile.php" title="View Profile">
+                            <img src="<?php echo htmlspecialchars($profile_image_path); ?>" 
+                                 alt="User Avatar" 
+                                 class="dashboard-avatar-img"
+                                 onerror="this.src='../public/assets/images/default-avatar.jpg?v=<?php echo time(); ?>'">
+                        </a>
                     </div>
                 </div>
                 <div class="header-right" style="display: flex; align-items: center; gap: 1.5rem;">
