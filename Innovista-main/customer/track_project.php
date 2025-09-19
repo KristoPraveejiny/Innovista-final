@@ -20,8 +20,6 @@ if (!function_exists('protectPage')) {
 }
 protectPage('customer');
 
-$pageTitle = 'Track Project';
-require_once '../includes/user_dashboard_header.php';
 require_once '../config/Database.php';
 
 $db = (new Database())->getConnection();
@@ -82,6 +80,10 @@ try {
     header('Location: my_projects.php');
     exit();
 }
+
+// Include header after all validation is complete
+$pageTitle = 'Track Project';
+require_once '../includes/user_dashboard_header.php';
 ?>
 
 <?php display_flash_message(); ?>
@@ -149,14 +151,53 @@ try {
                 <a href="payment_details.php?project_id=<?php echo htmlspecialchars($project_data['project_id']); ?>" class="btn-submit" style="background-color: var(--status-active);">Make Final Payment</a>
             </div>
         <?php endif; ?>
-        <?php if ($project_data['project_status'] === 'completed'): ?>
-            <div class="action-buttons mt-4">
-                <a href="leave_review.php?provider_id=<?php echo htmlspecialchars($project_data['provider_id']); ?>&project_id=<?php echo htmlspecialchars($project_data['project_id']); ?>" class="btn-submit" style="background-color: var(--status-verified);">Leave Review</a>
-            </div>
-        <?php endif; ?>
 
     </div>
 </div>
+
+<script>
+// Mark project notifications as read when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const projectId = <?php echo $project_data['project_id']; ?>;
+    
+    // Mark notifications as read
+    fetch('../handlers/mark_project_notifications_read.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'project_id=' + projectId
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Project notifications marked as read');
+            // Update the notification count in the header if it exists
+            updateHeaderNotificationCount();
+        }
+    })
+    .catch(error => {
+        console.error('Error marking notifications as read:', error);
+    });
+});
+
+// Function to update header notification count
+function updateHeaderNotificationCount() {
+    // This would update the main notification bell count
+    // You can implement this based on your existing notification system
+    const notificationBadge = document.querySelector('.notification-badge');
+    if (notificationBadge) {
+        // Decrease count by 1 or refresh the count
+        const currentCount = parseInt(notificationBadge.textContent) || 0;
+        if (currentCount > 0) {
+            notificationBadge.textContent = currentCount - 1;
+            if (currentCount - 1 === 0) {
+                notificationBadge.style.display = 'none';
+            }
+        }
+    }
+}
+</script>
 
 <?php require_once '../includes/user_dashboard_footer.php'; ?>
 

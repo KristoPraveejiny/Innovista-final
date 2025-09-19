@@ -34,10 +34,26 @@ $conn = $database->getConnection(); // Get the PDO connection object
 // --- Fetching Active Projects ---
 // Active projects are those in_progress, awaiting_final_payment, or disputed
 $active_projects_query = $conn->prepare("
-    SELECT prov.name as provider_name, cq.project_description, p.status, p.id as project_id, cq.id as custom_quotation_id
+    SELECT 
+        prov.name as provider_name, 
+        cq.project_description, 
+        p.status, 
+        p.id as project_id, 
+        cq.id as custom_quotation_id,
+        COALESCE(notification_counts.unread_count, 0) as unread_messages
     FROM projects p
     JOIN custom_quotations cq ON p.quotation_id = cq.id
     JOIN users prov ON cq.provider_id = prov.id
+    LEFT JOIN (
+        SELECT 
+            n.related_id as project_id,
+            COUNT(*) as unread_count
+        FROM notifications n
+        WHERE n.user_id = :id 
+        AND n.type = 'project' 
+        AND n.is_read = 0
+        GROUP BY n.related_id
+    ) notification_counts ON p.id = notification_counts.project_id
     WHERE cq.customer_id = :id AND p.status IN ('in_progress', 'awaiting_final_payment', 'disputed')
     ORDER BY p.id DESC
 ");
@@ -70,10 +86,27 @@ $pending_quotes = $pending_quotes_query->fetchAll(PDO::FETCH_ASSOC);
 
 // --- Fetching Completed Projects ---
 $completed_projects_query = $conn->prepare("
-    SELECT prov.name as provider_name, cq.project_description, p.id as project_id, cq.id as custom_quotation_id
+    SELECT 
+        prov.name as provider_name, 
+        cq.project_description, 
+        p.id as project_id, 
+        cq.id as custom_quotation_id,
+        cq.amount,
+        cq.advance,
+        COALESCE(notification_counts.unread_count, 0) as unread_messages
     FROM projects p
     JOIN custom_quotations cq ON p.quotation_id = cq.id
     JOIN users prov ON cq.provider_id = prov.id
+    LEFT JOIN (
+        SELECT 
+            n.related_id as project_id,
+            COUNT(*) as unread_count
+        FROM notifications n
+        WHERE n.user_id = :id 
+        AND n.type = 'project' 
+        AND n.is_read = 0
+        GROUP BY n.related_id
+    ) notification_counts ON p.id = notification_counts.project_id
     WHERE cq.customer_id = :id AND p.status = 'completed'
     ORDER BY p.id DESC
 ");
@@ -106,8 +139,15 @@ $completed_projects = $completed_projects_query->fetchAll(PDO::FETCH_ASSOC);
                                 else echo 'info'; // Fallback
                             ?>"><?php echo htmlspecialchars(ucwords(str_replace('_', ' ', $project['status']))); ?></span></td>
                         <td>
-                            <!-- Link to track_project.php, passing the custom_quotation_id -->
-                            <a href="track_project.php?id=<?php echo htmlspecialchars($project['custom_quotation_id']); ?>" class="btn-view">Track Project</a>
+                            <div class="action-container">
+                                <!-- Link to track_project.php, passing the custom_quotation_id -->
+                                <a href="track_project.php?id=<?php echo htmlspecialchars($project['custom_quotation_id']); ?>" class="btn-view">
+                                    Track Project
+                                    <?php if (($project['unread_messages'] ?? 0) > 0): ?>
+                                        <span class="message-badge"><?php echo ($project['unread_messages'] ?? 0); ?></span>
+                                    <?php endif; ?>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; else: ?>
@@ -165,15 +205,37 @@ $completed_projects = $completed_projects_query->fetchAll(PDO::FETCH_ASSOC);
     <div class="content-card">
         <div class="table-wrapper">
             <table>
-                <thead><tr><th>Provider</th><th>Project</th><th>Action</th></tr></thead>
+                <thead><tr><th>Provider</th><th>Project</th><th>Remaining Balance</th><th>Action</th></tr></thead>
                 <tbody>
                     <?php if (!empty($completed_projects)): foreach ($completed_projects as $project): ?>
                     <tr>
                         <td><?php echo htmlspecialchars($project['provider_name']); ?></td>
                         <td><?php echo htmlspecialchars($project['project_description']); ?></td>
-                        <td><span class="status-badge status-approved">Completed</span></td>
-                        <!-- FIX: Link to view_project_history.php, passing the custom_quotation_id -->
-                        <td><a href="view_project_history.php?id=<?php echo htmlspecialchars($project['custom_quotation_id']); ?>" class="btn-view">View & Review</a></td>
+                        <td>
+                            <?php 
+                            $remaining_balance = $project['amount'] - $project['advance'];
+                            if ($remaining_balance > 0): 
+                            ?>
+                                <span class="remaining-balance">Rs <?php echo number_format($remaining_balance, 2); ?></span>
+                            <?php else: ?>
+                                <span class="status-badge status-approved">Fully Paid</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <div class="action-container">
+                                <?php if ($remaining_balance > 0): ?>
+                                    <a href="payment_details.php?project_id=<?php echo htmlspecialchars($project['project_id']); ?>&type=final" class="btn-submit" style="background-color: var(--status-active); margin-bottom: 5px; display: block;">
+                                        Pay Remaining Balance
+                                    </a>
+                                <?php endif; ?>
+                                <a href="view_project_history.php?id=<?php echo htmlspecialchars($project['custom_quotation_id']); ?>" class="btn-view">
+                                    View & Review
+                                    <?php if (($project['unread_messages'] ?? 0) > 0): ?>
+                                        <span class="message-badge"><?php echo ($project['unread_messages'] ?? 0); ?></span>
+                                    <?php endif; ?>
+                                </a>
+                            </div>
+                        </td>
                     </tr>
                     <?php endforeach; else: ?>
                         <tr><td colspan="4" style="text-align: center;">You have no completed projects.</td></tr>
@@ -183,5 +245,41 @@ $completed_projects = $completed_projects_query->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 </div>
+
+<style>
+.action-container {
+    position: relative;
+    display: inline-block;
+}
+
+.message-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #dc2626;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.btn-view {
+    position: relative;
+    display: inline-block;
+}
+
+.remaining-balance {
+    color: #dc2626;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+</style>
 
 <?php require_once '../includes/user_dashboard_footer.php'; ?>
