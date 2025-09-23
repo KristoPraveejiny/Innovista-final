@@ -60,7 +60,7 @@ try {
             <div class="alert alert-danger"><?php echo htmlspecialchars($error_message); ?></div>
         <?php elseif (empty($orders)): ?>
             <p class="text-center">You have not placed any orders yet.</p>
-            <p class="text-center"><a href="../product.php" class="btn btn-primary">Start Shopping</a></p>
+            <p class="text-center"><a href="../public/product.php" class="btn btn-primary">Start Shopping</a></p>
         <?php else: ?>
             <div class="table-wrapper">
                 <table>

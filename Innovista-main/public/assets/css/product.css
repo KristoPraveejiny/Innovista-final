@@ -304,7 +304,7 @@
 
 /* Buy Now Button */
 .btn-purchase {
-    background: linear-gradient(135deg, #28a745, #20c997);
+    background: linear-gradient(135deg, #1e8b82e0, #0d2d23);
     color: white;
     border: none;
     border-radius: 50px;
