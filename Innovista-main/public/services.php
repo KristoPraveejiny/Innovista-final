@@ -91,7 +91,7 @@ $isLoggedInFlag = isUserLoggedIn() ? 'true' : 'false';
             <div class="package-section">
                 <h4>Complete Painting Package</h4>
                 <p>Bundle interior, exterior, and waterproofing services for a comprehensive painting solution.</p>
-                <button class="btn btn-primary btn-get-package" id="getAllServicesBtnPainting">Get All Painting Services</button>
+                <a href="serviceprovider.php?service=Painting" class="btn btn-primary btn-get-package" id="getAllServicesBtn">Get All Painting Services</a>
             </div>
         </div>
       
@@ -112,7 +112,7 @@ $isLoggedInFlag = isUserLoggedIn() ? 'true' : 'false';
             <div class="package-section">
                 <h4>Complete Restoration Package</h4>
                 <p>A full-service solution to completely renovate and restore your property from top to bottom.</p>
-                <button class="btn btn-primary btn-get-package" id="getAllServicesBtnRestoration">Get All Restoration Services</button>
+                <a href="serviceprovider.php?service=Restoration" class="btn btn-primary btn-get-package" id="getAllServicesBtn">Get All Restoration Services</a>
             </div>
         </div>
     </section>

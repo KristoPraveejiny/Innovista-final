@@ -77,8 +77,13 @@ function getImageSrc(mixed $rawImagePath): string {
         // It's a full URL, use it directly
         return htmlspecialchars($imagePath);
     } else {
-        // If the path starts with 'uploads/', use '../uploads/' as the prefix (for customer/provider)
+        // If the path starts with 'uploads/', check if it's a product image
         if (str_starts_with($imagePath, 'uploads/')) {
+            // Special handling for product images in public/uploads/products/
+            if (str_starts_with($imagePath, 'uploads/products/')) {
+                return htmlspecialchars('../public/' . $imagePath);
+            }
+            // For other uploads, use '../uploads/'
             return htmlspecialchars('../' . $imagePath);
         }
         // Otherwise, fallback to previous logic for admin

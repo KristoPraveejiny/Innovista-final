@@ -125,27 +125,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Clear OTP session data after successful order
         unset($_SESSION['pending_otp_transaction']);
         
-        // Redirect to my orders page
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => true,
-            'message' => 'Order placed successfully!',
-            'order_id' => $order_id,
-            'redirect_url' => '../customer/my_orders.php'
-        ]);
+        // Set success message and redirect
+        set_flash_message('success', 'Order placed successfully! Order ID: ' . $order_id);
+        header('Location: ../customer/my_orders.php');
+        exit();
         
     } catch (Exception $e) {
         $conn->rollBack();
         error_log("Order processing error: " . $e->getMessage());
         
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => false, 
-            'message' => 'Failed to process order: ' . $e->getMessage()
-        ]);
+        set_flash_message('error', 'Failed to process order: ' . $e->getMessage());
+        header('Location: ../public/checkout.php');
+        exit();
     }
 } else {
-    header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+    set_flash_message('error', 'Invalid request method');
+    header('Location: ../public/checkout.php');
+    exit();
 }
 ?>

@@ -26,8 +26,21 @@ $orders = [];
 $error_message = '';
 
 try {
-    // Fetch all orders for the logged-in customer
-    $stmt = $conn->prepare("SELECT id, created_at as order_date, total_amount, status, payment_method FROM orders WHERE user_id = :user_id ORDER BY created_at DESC");
+    // Fetch all orders with product information for the logged-in customer
+    $stmt = $conn->prepare("
+        SELECT 
+            o.id, 
+            o.created_at as order_date, 
+            o.total_amount, 
+            o.status, 
+            o.payment_method,
+            oi.product_name,
+            oi.quantity
+        FROM orders o
+        LEFT JOIN order_items oi ON o.id = oi.order_id
+        WHERE o.user_id = :user_id 
+        ORDER BY o.created_at DESC
+    ");
     $stmt->bindParam(':user_id', $customer_id, PDO::PARAM_INT);
     $stmt->execute();
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -68,9 +81,9 @@ try {
                         <tr>
                             <!-- <th>Order ID</th> -->
                             <th>Order Date</th>
+                            <th>Product Name</th>
+                            <th>Quantity</th>
                             <th>Total Amount</th>
-                            <th>Advance Paid</th> 
-                            <th>Balance Due</th> 
                             <th>Payment Method</th>
                             <th>Status</th>
                             <th>Action</th>
@@ -80,11 +93,9 @@ try {
                         <?php foreach ($orders as $order): ?>
                             <tr>
                                 <td><?php echo htmlspecialchars(date('d M Y', strtotime($order['order_date']))); ?></td>
+                                <td><?php echo htmlspecialchars($order['product_name'] ?? 'N/A'); ?></td>
+                                <td><?php echo htmlspecialchars($order['quantity'] ?? '1'); ?></td>
                                 <td>Rs. <?php echo htmlspecialchars(number_format($order['total_amount'], 2)); ?></td>
-                                <td>Rs. <?php echo htmlspecialchars(number_format($order['advance_amount'], 2)); ?></td> 
-                                <td style="color: <?php echo ($order['balance_due'] > 0) ? '#dc3545' : '#28a745'; ?>;">
-                                    Rs. <?php echo htmlspecialchars(number_format($order['balance_due'], 2)); ?>
-                                </td>
                                 <td><?php echo htmlspecialchars(ucfirst($order['payment_method'])); ?></td>
                                 <td>
                                     <span class="status-badge status-<?php echo htmlspecialchars(strtolower(str_replace('_', '-', $order['status']))); ?>">

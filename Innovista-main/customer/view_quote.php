@@ -20,13 +20,7 @@ if (!function_exists('protectPage')) {
 }
 protectPage('customer');
 
-$pageTitle = 'View Quotation';
-require_once '../includes/user_dashboard_header.php';
-require_once '../config/Database.php';
-
-$db = (new Database())->getConnection();
-$loggedInUserId = getUserId(); // Current customer's ID
-
+// Get the quotation ID and type from URL parameters
 $quotation_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 $quote_type = filter_input(INPUT_GET, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS); // 'original' or 'custom'
 
@@ -35,6 +29,13 @@ if (!$quotation_id || empty($quote_type)) {
     header('Location: my_projects.php');
     exit();
 }
+
+$pageTitle = 'View Quotation';
+require_once '../includes/user_dashboard_header.php';
+require_once '../config/Database.php';
+
+$db = (new Database())->getConnection();
+$loggedInUserId = getUserId(); // Current customer's ID
 
 $quote = null;
 $is_custom_quote = false; // Flag to determine if it's a provider's custom quote
@@ -183,7 +184,7 @@ if ($is_custom_quote) {
             <button type="button" class="btn-submit" id="btnConfirmBooking" style="background-color: var(--status-active); flex:1;">Confirm Booking & Pay Advance</button>
             <form action="../handlers/handle_quote_action.php" method="POST" style="flex:1;">
                 <input type="hidden" name="action" value="decline">
-                <input type="hidden" name="quote_id" value="<?php echo htmlspecialchars($quotation_id); ?>">
+                <input type="hidden" name="quotation_id" value="<?php echo htmlspecialchars($quotation_id); ?>">
                 <input type="hidden" name="quote_type" value="custom">
                 <button type="submit" name="submit_decline" class="btn-submit" style="background-color: var(--status-rejected); flex:1;" onclick="return confirm('Are you sure you want to decline this quotation?');">Decline Quotation</button>
             </form>

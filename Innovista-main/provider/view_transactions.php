@@ -2,21 +2,54 @@
 $pageTitle = 'My Earnings & Transactions';
 require_once 'provider_header.php';
 require_once '../config/session.php';
+require_once '../config/Database.php';
 protectPage('provider'); 
 
-// --- In a real application, this data would come from your database ---
+$provider_id = $_SESSION['user_id'];
+$db = (new Database())->getConnection();
+
+// Calculate real stats from database
+$total_earnings = 0;
+$stmt_total = $db->prepare("SELECT SUM(py.amount) as total_earnings FROM payments py JOIN custom_quotations cq ON py.quotation_id = cq.id WHERE cq.provider_id = :provider_id");
+$stmt_total->bindParam(':provider_id', $provider_id, PDO::PARAM_INT);
+$stmt_total->execute();
+$total_earnings = $stmt_total->fetch(PDO::FETCH_ASSOC)['total_earnings'] ?? 0;
+
+$pending_payout = 0;
+// For now, we'll set pending payout to 0 since there's no status column
+// In a real system, you might have a separate payouts table or different logic
+$pending_payout = 0;
+
+$this_month_earnings = 0;
+$stmt_month = $db->prepare("SELECT SUM(py.amount) as this_month FROM payments py JOIN custom_quotations cq ON py.quotation_id = cq.id WHERE cq.provider_id = :provider_id AND MONTH(py.payment_date) = MONTH(CURRENT_DATE()) AND YEAR(py.payment_date) = YEAR(CURRENT_DATE())");
+$stmt_month->bindParam(':provider_id', $provider_id, PDO::PARAM_INT);
+$stmt_month->execute();
+$this_month_earnings = $stmt_month->fetch(PDO::FETCH_ASSOC)['this_month'] ?? 0;
+
 $stats = [
-    'total_earnings' => 15750.00,
-    'pending_payout' => 2500.00,
-    'this_month' => 7500.00
+    'total_earnings' => $total_earnings,
+    'pending_payout' => $pending_payout,
+    'this_month' => $this_month_earnings
 ];
 
-$transactions = [
-    ['date' => '22 Jul 2025', 'project' => 'Antique Chair Refurbishing', 'type' => 'Final Payment Received', 'amount' => 1500.00, 'status' => 'Processing Payout'],
-    ['date' => '20 Jul 2025', 'project' => 'Exterior House Painting Payout', 'type' => 'Payout', 'amount' => -2000.00, 'status' => 'Completed'],
-    ['date' => '15 Jul 2025', 'project' => 'Living Room Renovation', 'type' => 'Final Payment Received', 'amount' => 5000.00, 'status' => 'In Account'],
-    ['date' => '10 Jun 2025', 'project' => 'Living Room Renovation', 'type' => 'Advance Payment Received', 'amount' => 2500.00, 'status' => 'Paid Out'],
-];
+// Fetch real transaction history from database
+$transactions = [];
+$stmt_transactions = $db->prepare("
+    SELECT 
+        py.payment_date as date,
+        cq.project_description as project,
+        py.payment_type as type,
+        py.amount,
+        'completed' as status
+    FROM payments py 
+    JOIN custom_quotations cq ON py.quotation_id = cq.id 
+    WHERE cq.provider_id = :provider_id 
+    ORDER BY py.payment_date DESC 
+    LIMIT 20
+");
+$stmt_transactions->bindParam(':provider_id', $provider_id, PDO::PARAM_INT);
+$stmt_transactions->execute();
+$transactions = $stmt_transactions->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <h2>My Earnings & Transactions</h2>
@@ -65,7 +98,7 @@ $transactions = [
                 <tbody>
                     <?php if (!empty($transactions)): foreach ($transactions as $t): ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($t['date']); ?></td>
+                        <td><?php echo date('d M Y', strtotime($t['date'])); ?></td>
                         <td><?php echo htmlspecialchars($t['project']); ?></td>
                         <td><?php echo htmlspecialchars($t['type']); ?></td>
                         <td style="color: <?php echo $t['amount'] < 0 ? '#e74c3c' : '#27ae60'; ?>; font-weight: 600;">

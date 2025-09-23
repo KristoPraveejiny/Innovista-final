@@ -53,20 +53,12 @@ $custom_quotes_awaiting_customer_count = $stmt_custom_awaiting_customer->fetch(P
 $pending_quotes_total_count = $original_quotes_pending_count + $custom_quotes_awaiting_customer_count;
 
 
-// 3. Unread Messages Count
+// 3. Unread Messages Count (using notifications table)
 $unread_messages_count = 0;
-$stmt_customer_email = $conn->prepare("SELECT email FROM users WHERE id = :id");
-$stmt_customer_email->bindParam(':id', $customer_id, PDO::PARAM_INT);
-$stmt_customer_email->execute();
-$customer_email_result = $stmt_customer_email->fetch(PDO::FETCH_ASSOC);
-
-if ($customer_email_result) {
-    $customer_actual_email = $customer_email_result['email'];
-    $stmt_unread_messages = $conn->prepare("SELECT COUNT(*) as count FROM contacts WHERE email = :email AND is_read = 0");
-    $stmt_unread_messages->bindParam(':email', $customer_actual_email);
-    $stmt_unread_messages->execute();
-    $unread_messages_count = $stmt_unread_messages->fetch(PDO::FETCH_ASSOC)['count'];
-}
+$stmt_unread_messages = $conn->prepare("SELECT COUNT(*) as count FROM notifications WHERE user_id = :user_id AND is_read = 0");
+$stmt_unread_messages->bindParam(':user_id', $customer_id, PDO::PARAM_INT);
+$stmt_unread_messages->execute();
+$unread_messages_count = $stmt_unread_messages->fetch(PDO::FETCH_ASSOC)['count'];
 
 
 // NEW STAT 1: Completed Projects Count
@@ -173,14 +165,14 @@ $orders_awaiting_balance_query = $conn->prepare("
             <div class="stat-info-customer"><h4>Completed Projects</h4><p><?php echo $completed_projects_count; ?></p></div>
         </div>
         <!-- NEW STAT CARD 2: Total Payments Made -->
-        <div class="stat-card-customer">
+        <div class="stat-card-customer total-paid-card">
             <div class="stat-icon-customer primary-color-bg"><i class="fas fa-wallet"></i></div>
             <div class="stat-info-customer"><h4>Total Paid</h4><p>Rs <?php echo number_format($total_payments_made, 2); ?></p></div>
         </div>
         <!-- NEW STAT CARD 3: Balance Due Orders -->
         <div class="stat-card-customer">
             <div class="stat-icon-customer red"><i class="fas fa-money-bill-wave"></i></div>
-            <!-- <div class="stat-info-customer"><h4>Balance Due Orders</h4><p><?php echo $balance_due_orders_count; ?></p></div> -->
+            <div class="stat-info-customer"><h4>Balance Due Orders</h4><p><?php echo $balance_due_orders_count ?? '0'; ?></p></div>
         </div>
     </div>
 
