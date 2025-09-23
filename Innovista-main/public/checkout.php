@@ -14,21 +14,32 @@ if (!isUserLoggedIn()) {
     exit();
 }
 
+// Handle direct product purchase or get cart from session
+$cart = [];
+$cartTotal = 0;
+
+// Check if this is a direct product purchase
+if (isset($_POST['product_data'])) {
+    $productData = json_decode($_POST['product_data'], true);
+    if ($productData) {
+        $cart = [$productData]; // Single product as cart
+        $cartTotal = $productData['price'] * ($productData['quantity'] ?? 1);
+    }
+} else {
 // Get the user's cart from the session
 $cart = $_SESSION['cart'] ?? [];
 
 // Calculate cart total
-$cartTotal = 0;
 if (!empty($cart)) {
     foreach ($cart as $item) {
-        $cartTotal += ($item['price'] * $item['quantity']);
+            $cartTotal += ($item['price'] * ($item['quantity'] ?? 1));
+        }
     }
 }
 
-// Default payment terms for initial display
-$defaultAdvancePercentage = 0.25; // 25%
-$initialAdvanceAmount = $cartTotal * $defaultAdvancePercentage;
-$initialBalanceDue = $cartTotal - $initialAdvanceAmount;
+// Default payment terms for initial display (full payment)
+$initialAdvanceAmount = $cartTotal; // Full payment by default
+$initialBalanceDue = 0; // No balance due for full payment
 
 ?>
 
@@ -248,12 +259,13 @@ $initialBalanceDue = $cartTotal - $initialAdvanceAmount;
         <div class="checkout-container">
             <div class="checkout-details">
                 <h2>Shipping & Billing Information</h2>
-                <form id="checkoutForm" action="../handlers/process_order.php" method="POST">
+                <form id="checkoutForm" action="../handlers/process_direct_order.php" method="POST">
                     <!-- Hidden inputs for calculated amounts -->
                     <input type="hidden" id="cart_total_amount_hidden" name="cart_total_amount" value="<?php echo htmlspecialchars(number_format($cartTotal, 2, '.', '')); ?>">
                     <input type="hidden" id="advance_amount_to_pay_hidden" name="advance_amount_to_pay" value="<?php echo htmlspecialchars(number_format($initialAdvanceAmount, 2, '.', '')); ?>">
                     <input type="hidden" id="balance_due_amount_hidden" name="balance_due_amount" value="<?php echo htmlspecialchars(number_format($initialBalanceDue, 2, '.', '')); ?>">
-                    <input type="hidden" id="selected_payment_terms_hidden" name="selected_payment_terms" value="advance_25"> <!-- Default -->
+                    <input type="hidden" id="selected_payment_terms_hidden" name="selected_payment_terms" value="full_card"> <!-- Default -->
+                    <input type="hidden" name="product_data" value="<?php echo htmlspecialchars(json_encode($cart[0] ?? [])); ?>">
 
                     <!-- Shipping Information -->
                     <h3>Shipping Address</h3>
@@ -282,72 +294,59 @@ $initialBalanceDue = $cartTotal - $initialAdvanceAmount;
                         <input type="email" id="shipping_email" name="shipping_email" required>
                     </div>
 
-                    <!-- Billing Information (Optional: "Same as shipping" checkbox) -->
-                    <h3 style="margin-top: 2rem;">Billing Address</h3>
+                    <!-- Quantity -->
+                    <h3 style="margin-top: 2rem;">Order Details</h3>
                     <div class="form-group">
-                        <input type="checkbox" id="same_as_shipping" name="same_as_shipping" checked>
-                        <label for="same_as_shipping" style="display: inline-block; margin-left: 0.5rem;">Same as shipping address</label>
-                    </div>
-                    <div id="billing-fields" style="display:none;">
-                        <div class="form-group">
-                            <label for="billing_name">Full Name</label>
-                            <input type="text" id="billing_name" name="billing_name">
-                        </div>
-                        <div class="form-group">
-                            <label for="billing_address">Address Line 1</label>
-                            <input type="text" id="billing_address" name="billing_address">
-                        </div>
-                        <div class="form-group">
-                            <label for="billing_city">City</label>
-                            <input type="text" id="billing_city" name="billing_city">
-                        </div>
-                        <div class="form-group">
-                            <label for="billing_zip">Zip/Postal Code</label>
-                            <input type="text" id="billing_zip" name="billing_zip">
-                        </div>
+                        <label for="quantity">Quantity</label>
+                        <input type="number" id="quantity" name="quantity" min="1" value="<?php echo $cart[0]['quantity'] ?? 1; ?>" required>
                     </div>
 
-                    <h3 style="margin-top: 2rem;">Payment Method & Terms</h3>
+                    <h3 style="margin-top: 2rem;">Payment Method</h3>
                     <div class="form-group">
-                        <label for="payment_type_choice">Choose Payment Option:</label>
-                        <select id="payment_type_choice" name="payment_type_choice" required>
-                            <option value="advance">Advance Payment (25%, 50%, or 75%)</option>
-                            <option value="full">Full Payment (100%)</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="advance-percentage-group">
-                        <label for="advance_percentage_choice">Select Advance Percentage:</label>
-                        <select id="advance_percentage_choice" name="advance_percentage_choice">
-                            <option value="25">25% Advance</option>
-                            <option value="50">50% Advance</option>
-                            <option value="75">75% Advance</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="payment_method">Select Payment Gateway:</label>
+                        <label for="payment_method">Select Payment Option:</label>
                         <select id="payment_method" name="payment_method" required>
-                            <option value="">-- Select Payment Gateway --</option>
-                            <option value="card">Credit/Debit Card</option>
-                            <option value="cod">Cash on Delivery (COD)</option>
+                            <option value="card" selected>Credit/Debit Card Payment</option>
                         </select>
                     </div>
                     
-                    <div id="card-details-section" style="display:none;">
+                    <div id="card-details-section" style="display:block;">
                         <h4>Card Details</h4>
                         <div class="form-group">
-                            <label for="card_number">Card Number</label>
-                            <input type="text" id="card_number" name="card_number" placeholder="•••• •••• •••• ••••" maxlength="19">
+                            <label for="card_number">Card Number *</label>
+                            <input type="text" id="card_number" name="card_number" placeholder="•••• •••• •••• ••••" maxlength="19" required pattern="[0-9\s]{13,19}" title="Enter a valid 16-digit card number">
+                            <div id="card_number_error" class="error-message" style="color: red; font-size: 12px; display: none;"></div>
                         </div>
                         <div class="form-group">
-                            <label for="card_expiry">Expiry Date (MM/YY)</label>
-                            <input type="text" id="card_expiry" name="card_expiry" placeholder="MM/YY" maxlength="5">
+                            <label for="card_expiry">Expiry Date (MM/YY) *</label>
+                            <input type="text" id="card_expiry" name="card_expiry" placeholder="MM/YY" maxlength="5" required pattern="(0[1-9]|1[0-2])\/([0-9]{2})" title="Enter expiry date in MM/YY format">
+                            <div id="card_expiry_error" class="error-message" style="color: red; font-size: 12px; display: none;"></div>
                         </div>
                         <div class="form-group">
-                            <label for="card_cvc">CVC</label>
-                            <input type="text" id="card_cvc" name="card_cvc" placeholder="CVC" maxlength="4">
+                            <label for="card_cvc">CVC *</label>
+                            <input type="text" id="card_cvc" name="card_cvc" placeholder="CVC" maxlength="4" required pattern="[0-9]{3,4}" title="Enter 3 or 4 digit CVC">
+                            <div id="card_cvc_error" class="error-message" style="color: red; font-size: 12px; display: none;"></div>
                         </div>
+                        <div class="form-group">
+                            <label for="cardholder_name">Cardholder Name *</label>
+                            <input type="text" id="cardholder_name" name="cardholder_name" placeholder="Name on Card" required pattern="[A-Za-z\s]{2,50}" title="Enter cardholder name">
+                            <div id="cardholder_name_error" class="error-message" style="color: red; font-size: 12px; display: none;"></div>
+                        </div>
+                    </div>
+
+                    <!-- OTP Verification Section -->
+                    <div id="otp-section" style="display:none; margin-top: 2rem; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
+                        <h4>OTP Verification</h4>
+                        <p>We've sent a 6-digit OTP to your registered email address. Please enter it below to complete your payment.</p>
+                        <div class="form-group">
+                            <label for="otp_code">Enter OTP *</label>
+                            <input type="text" id="otp_code" name="otp_code" placeholder="000000" maxlength="6" pattern="[0-9]{6}">
+                            <div id="otp_error" class="error-message" style="color: red; font-size: 12px; display: none;"></div>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <button type="button" id="verify_otp_btn" class="btn btn-primary" style="margin-right: 1rem;">Verify OTP & Complete Payment</button>
+                            <button type="button" id="resend_otp_btn" class="btn btn-secondary">Resend OTP</button>
+                        </div>
+                        <div id="otp_timer" style="margin-top: 0.5rem; font-size: 12px; color: #666;"></div>
                     </div>
 
                     <!-- Dynamic payment choice display -->
@@ -359,7 +358,7 @@ $initialBalanceDue = $cartTotal - $initialAdvanceAmount;
                         <p class="cart-empty-message">Your cart is empty. Cannot proceed to checkout.</p>
                         <button type="submit" class="btn-place-order" disabled>Place Order</button>
                     <?php else: ?>
-                        <button type="submit" class="btn-place-order">Pay Advance (Rs. <?php echo htmlspecialchars(number_format($initialAdvanceAmount, 2)); ?>)</button>
+                        <button type="submit" class="btn-place-order">Pay Now (Rs. <?php echo htmlspecialchars(number_format($cartTotal, 2)); ?>)</button>
                     <?php endif; ?>
                 </form>
             </div>
@@ -388,37 +387,13 @@ $initialBalanceDue = $cartTotal - $initialAdvanceAmount;
                     <span id="summaryCartTotal">Rs. <?php echo htmlspecialchars(number_format($cartTotal, 2)); ?></span>
                 </div>
                 <div class="order-total" style="font-size: 1rem; border-top: none; padding-top: 0.5rem;">
-                    <span>Payment Now:</span>
-                    <span id="summaryPaymentNow">Rs. <?php echo htmlspecialchars(number_format($initialAdvanceAmount, 2)); ?></span>
-                </div>
-                <div class="order-total" style="font-size: 1rem; border-top: none; padding-top: 0.5rem;">
-                    <span>Balance Due:</span>
-                    <span id="summaryBalanceDue">Rs. <?php echo htmlspecialchars(number_format($initialBalanceDue, 2)); ?></span>
+                    <span>Total Payment:</span>
+                    <span id="summaryPaymentNow">Rs. <?php echo htmlspecialchars(number_format($cartTotal, 2)); ?></span>
                 </div>
             </div>
         </div>
     </main>
 
-    <div id="otpModal" class="otp-modal" style="display:none;">
-        <div class="otp-modal-content">
-            <span class="close-btn" onclick="closeOtpModal()">&times;</span>
-            <h2>Verify Your Payment</h2>
-            <p>An OTP has been sent to your registered email address.</p>
-            <div class="otp-input-group">
-                <input type="text" id="otp_digit_1" class="otp-input" maxlength="1">
-                <input type="text" id="otp_digit_2" class="otp-input" maxlength="1">
-                <input type="text" id="otp_digit_3" class="otp-input" maxlength="1">
-                <input type="text" id="otp_digit_4" class="otp-input" maxlength="1">
-                <input type="text" id="otp_digit_5" class="otp-input" maxlength="1">
-                <input type="text" id="otp_digit_6" class="otp-input" maxlength="1">
-            </div>
-            <p id="otpMessage" class="otp-message"></p>
-            <div class="otp-action-buttons">
-                <button type="button" id="verifyOtpBtn" class="btn btn-verify">Verify OTP</button>
-                <button type="button" id="resendOtpBtn" class="btn btn-resend">Resend OTP</button>
-            </div>
-        </div>
-    </div>
 
     <script>
         // Global variables to store checkout form data temporarily
@@ -427,11 +402,6 @@ $initialBalanceDue = $cartTotal - $initialAdvanceAmount;
         const cartTotalAmount = parseFloat(document.getElementById('cart_total_amount_hidden').value); // Get total from PHP
 
         document.addEventListener('DOMContentLoaded', function() {
-            const sameAsShippingCheckbox = document.getElementById('same_as_shipping');
-            const billingFields = document.getElementById('billing-fields');
-            const paymentTypeChoiceSelect = document.getElementById('payment_type_choice'); // New
-            const advancePercentageChoiceSelect = document.getElementById('advance_percentage_choice'); // New
-            const advancePercentageGroup = document.getElementById('advance-percentage-group'); // New
             const paymentMethodSelect = document.getElementById('payment_method');
             const cardDetailsSection = document.getElementById('card-details-section');
             const checkoutForm = document.getElementById('checkoutForm');
@@ -439,7 +409,6 @@ $initialBalanceDue = $cartTotal - $initialAdvanceAmount;
 
             const summaryCartTotal = document.getElementById('summaryCartTotal');
             const summaryPaymentNow = document.getElementById('summaryPaymentNow');
-            const summaryBalanceDue = document.getElementById('summaryBalanceDue');
             const paymentChoiceSummary = document.getElementById('payment-choice-summary');
 
 
@@ -448,287 +417,382 @@ $initialBalanceDue = $cartTotal - $initialAdvanceAmount;
             const hiddenSelectedPaymentTermsInput = document.getElementById('selected_payment_terms_hidden');
 
 
-            const otpModal = document.getElementById('otpModal');
-            const otpInputs = document.querySelectorAll('.otp-input-group .otp-input');
-            const verifyOtpBtn = document.getElementById('verifyOtpBtn');
-            const resendOtpBtn = document.getElementById('resendOtpBtn');
-            const otpMessage = document.getElementById('otpMessage');
 
             // --- Form Field Toggling ---
-            function toggleBillingFields() {
-                if (sameAsShippingCheckbox.checked) {
-                    billingFields.style.display = 'none';
-                    // Clear and un-require billing fields
-                    billingFields.querySelectorAll('input').forEach(input => {
-                        input.removeAttribute('required');
-                        input.value = '';
-                    });
-                } else {
-                    billingFields.style.display = 'block';
-                    // Make billing fields required
-                    billingFields.querySelectorAll('input').forEach(input => {
-                        input.setAttribute('required', 'required');
-                    });
-                }
-            }
 
-            function toggleCardDetails() {
-                if (paymentMethodSelect.value === 'card') {
-                    cardDetailsSection.style.display = 'block';
-                    cardDetailsSection.querySelectorAll('input').forEach(input => {
-                        input.setAttribute('required', 'required');
-                    });
-                } else {
-                    cardDetailsSection.style.display = 'none';
-                    cardDetailsSection.querySelectorAll('input').forEach(input => {
-                        input.removeAttribute('required');
-                        input.value = '';
-                    });
-                }
-            }
+            // Card details are always shown since only card payment is available
 
             // --- Payment Calculation & Display Logic ---
             function updatePaymentDetails() {
-                const paymentTypeChoice = paymentTypeChoiceSelect.value;
-                const advancePercentageChoice = parseInt(advancePercentageChoiceSelect.value); // Will be NaN if full payment
+                const quantity = parseInt(document.getElementById('quantity').value) || 1;
                 
-                let paymentNowAmount = 0;
-                let balanceAmount = 0;
-                let paymentTermsText = "";
-                let selectedPaymentTermsValue = "";
+                // Update cart total based on quantity
+                const basePrice = <?php echo $cart[0]['price'] ?? 0; ?>;
+                const updatedCartTotal = basePrice * quantity;
+                
+                // Update cart total display
+                document.getElementById('cart_total_amount_hidden').value = updatedCartTotal.toFixed(2);
+                summaryCartTotal.textContent = `Rs. ${updatedCartTotal.toFixed(2)}`;
+                
+                // Only card payment available - full payment
+                const totalPayment = updatedCartTotal;
+                const paymentTermsText = "Credit/Debit Card Payment";
+                const selectedPaymentTermsValue = "full_card";
 
-                if (paymentTypeChoice === 'full') {
-                    paymentNowAmount = cartTotalAmount;
-                    balanceAmount = 0;
-                    paymentTermsText = "Full Payment (100%)";
-                    selectedPaymentTermsValue = 'full';
-                    advancePercentageGroup.style.display = 'none';
-                } else { // advance payment
-                    const percentage = advancePercentageChoice / 100;
-                    paymentNowAmount = cartTotalAmount * percentage;
-                    balanceAmount = cartTotalAmount - paymentNowAmount;
-                    paymentTermsText = `${advancePercentageChoice}% Advance Payment`;
-                    selectedPaymentTermsValue = `advance_${advancePercentageChoice}`;
-                    advancePercentageGroup.style.display = 'block';
-                }
-
-                summaryPaymentNow.textContent = `Rs. ${paymentNowAmount.toFixed(2)}`;
-                summaryBalanceDue.textContent = `Rs. ${balanceAmount.toFixed(2)}`;
-                btnPlaceOrder.textContent = `Pay ${paymentTermsText.replace(' Payment', '')} (Rs. ${paymentNowAmount.toFixed(2)})`;
+                summaryPaymentNow.textContent = `Rs. ${totalPayment.toFixed(2)}`;
+                btnPlaceOrder.textContent = `Pay Now (Rs. ${totalPayment.toFixed(2)})`;
                 
                 // Update hidden inputs for backend
-                hiddenAdvanceAmountInput.value = paymentNowAmount.toFixed(2);
-                hiddenBalanceDueAmountInput.value = balanceAmount.toFixed(2);
+                hiddenAdvanceAmountInput.value = totalPayment.toFixed(2);
+                hiddenBalanceDueAmountInput.value = "0.00";
                 hiddenSelectedPaymentTermsInput.value = selectedPaymentTermsValue;
 
                 // Update dynamic summary text
                 paymentChoiceSummary.innerHTML = `
                     <p>You have chosen: <span>${paymentTermsText}</span></p>
-                    <p>Amount to pay now: <span>Rs. ${paymentNowAmount.toFixed(2)}</span></p>
-                    <p>Balance due later: <span>Rs. ${balanceAmount.toFixed(2)}</span></p>
+                    <p>Total amount to pay: <span>Rs. ${totalPayment.toFixed(2)}</span></p>
                 `;
             }
 
 
-            // Initial state
-            toggleBillingFields();
-            toggleCardDetails();
-            updatePaymentDetails(); // Initial calculation
-
-            // Event listeners for toggling
-            if (sameAsShippingCheckbox) sameAsShippingCheckbox.addEventListener('change', toggleBillingFields);
-            if (paymentMethodSelect) paymentMethodSelect.addEventListener('change', toggleCardDetails);
-            if (paymentTypeChoiceSelect) paymentTypeChoiceSelect.addEventListener('change', updatePaymentDetails); // New listener
-            if (advancePercentageChoiceSelect) advancePercentageChoiceSelect.addEventListener('change', updatePaymentDetails); // New listener
-
-
-            // --- OTP Input Handling (focus and auto-advance) ---
-            otpInputs.forEach((input, index) => {
-                input.addEventListener('input', () => {
-                    if (input.value.length === 1 && index < otpInputs.length - 1) {
-                        otpInputs[index + 1].focus();
+            // --- Card Validation Functions ---
+            function validateCardNumber(cardNumber) {
+                // Remove spaces and check if it's all digits
+                const cleaned = cardNumber.replace(/\s/g, '');
+                if (!/^\d{13,19}$/.test(cleaned)) {
+                    return false;
+                }
+                
+                // Luhn algorithm validation
+                let sum = 0;
+                let isEven = false;
+                for (let i = cleaned.length - 1; i >= 0; i--) {
+                    let digit = parseInt(cleaned.charAt(i));
+                    if (isEven) {
+                        digit *= 2;
+                        if (digit > 9) {
+                            digit -= 9;
+                        }
                     }
-                });
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Backspace' && input.value.length === 0 && index > 0) {
-                        otpInputs[index - 1].focus();
-                    }
-                });
-            });
-
-            // --- OTP Modal Functions ---
-            window.openOtpModal = function(message = 'An OTP has been sent to your registered email address.') {
-                otpMessage.textContent = message;
-                otpMessage.className = 'otp-message'; // Reset class
-                otpInputs.forEach(input => input.value = ''); // Clear inputs
-                if (otpModal) otpModal.style.display = 'flex';
-                otpInputs[0].focus(); // Focus first input
-            };
-
-            window.closeOtpModal = function() {
-                if (otpModal) otpModal.style.display = 'none';
-                otpMessage.textContent = '';
-                checkoutFormData = null; // Clear saved form data
-                currentTransactionId = null;
-            };
-
-            function showOtpMessage(message, isSuccess = false) {
-                otpMessage.textContent = message;
-                otpMessage.className = `otp-message ${isSuccess ? 'success' : 'error'}`;
+                    sum += digit;
+                    isEven = !isEven;
+                }
+                return sum % 10 === 0;
             }
 
-            // --- Checkout Form Submission (AJAX) ---
-            checkoutForm.addEventListener('submit', function(e) {
-                e.preventDefault(); // Prevent default form submission
+            function validateExpiryDate(expiry) {
+                const regex = /^(0[1-9]|1[0-2])\/([0-9]{2})$/;
+                if (!regex.test(expiry)) return false;
+                
+                const [month, year] = expiry.split('/');
+                const currentDate = new Date();
+                const currentYear = currentDate.getFullYear() % 100;
+                const currentMonth = currentDate.getMonth() + 1;
+                
+                const expYear = parseInt(year);
+                const expMonth = parseInt(month);
+                
+                if (expYear < currentYear) return false;
+                if (expYear === currentYear && expMonth < currentMonth) return false;
+                
+                return true;
+            }
 
-                // Disable button and show loading indicator
-                btnPlaceOrder.disabled = true;
-                btnPlaceOrder.textContent = 'Processing...';
+            function validateCVC(cvc) {
+                return /^\d{3,4}$/.test(cvc);
+            }
 
-                checkoutFormData = new FormData(checkoutForm); // Store form data
+            function validateCardholderName(name) {
+                return /^[A-Za-z\s]{2,50}$/.test(name);
+            }
 
-                // Append a specific action for the initial order processing
-                checkoutFormData.append('action', 'place_order');
+            function showError(fieldId, message) {
+                const errorDiv = document.getElementById(fieldId + '_error');
+                if (errorDiv) {
+                    errorDiv.textContent = message;
+                    errorDiv.style.display = 'block';
+                }
+            }
 
-                fetch('../handlers/process_order.php', { // Path from public/ to handlers/
+            function hideError(fieldId) {
+                const errorDiv = document.getElementById(fieldId + '_error');
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                }
+            }
+
+            // --- OTP Functions ---
+            let otpTimer = null;
+            let otpAttempts = 0;
+            const maxOtpAttempts = 3;
+
+            function generateOTP() {
+                return Math.floor(100000 + Math.random() * 900000).toString();
+            }
+
+            function sendOTP() {
+                // Send OTP request to server
+                fetch('../handlers/send_otp.php', {
                     method: 'POST',
-                    body: checkoutFormData
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=send_otp'
                 })
-                .then(response => {
-                    // Check if response is OK (200 status) before trying to parse JSON
-                    if (!response.ok) { 
-                        console.error('HTTP Error:', response.status, response.statusText);
-                        // Try to read response text for more detailed error from server
-                        return response.text().then(text => { throw new Error('Server responded with status ' + response.status + ': ' + text); });
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
-                    btnPlaceOrder.disabled = false;
-                    updatePaymentDetails(); // Reset button text based on current selections
-
                     if (data.success) {
-                        if (data.requires_otp) {
-                            currentTransactionId = data.transaction_id;
-                            openOtpModal(data.message || 'An OTP has been sent to your registered email address.');
-                        } else {
-                            // No OTP required (e.g., COD for advance or full payment), redirect directly
-                            window.location.href = `order_confirmation.php?order_id=${data.order_id}`;
-                        }
+                        // Store transaction ID for later use
+                        window.currentTransactionId = data.transaction_id;
+                        
+                        // Show OTP section
+                        document.getElementById('otp-section').style.display = 'block';
+                        document.getElementById('verify_otp_btn').disabled = false;
+                        
+                        // Start timer (5 minutes)
+                        startOTPTimer(300);
+                        
+                        alert('OTP sent to your email! For testing, use: ' + data.otp);
                     } else {
-                        alert('Order failed: ' + (data.message || 'An unknown error occurred.'));
+                        alert('Failed to send OTP: ' + data.message);
                     }
                 })
                 .catch(error => {
-                    console.error('Error during checkout submission:', error);
-                    btnPlaceOrder.disabled = false;
-                    updatePaymentDetails(); // Reset button text
-                    alert('A network error occurred. Please try again.'); // Generic user-facing message
+                    console.error('Error:', error);
+                    alert('Failed to send OTP. Please try again.');
                 });
-            });
+            }
 
-            // --- OTP Verification Submission ---
+            function startOTPTimer(seconds) {
+                let timeLeft = seconds;
+                const timerDiv = document.getElementById('otp_timer');
+                const resendBtn = document.getElementById('resend_otp_btn');
+                
+                otpTimer = setInterval(() => {
+                    const minutes = Math.floor(timeLeft / 60);
+                    const secs = timeLeft % 60;
+                    timerDiv.textContent = `OTP expires in: ${minutes}:${secs.toString().padStart(2, '0')}`;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(otpTimer);
+                        timerDiv.textContent = 'OTP expired. Please request a new one.';
+                        resendBtn.disabled = false;
+                        document.getElementById('verify_otp_btn').disabled = true;
+                    }
+                    
+                    timeLeft--;
+                }, 1000);
+            }
+
+            function verifyOTP() {
+                const enteredOTP = document.getElementById('otp_code').value;
+                
+                if (enteredOTP.length !== 6) {
+                    showError('otp', 'Please enter a 6-digit OTP');
+                    return false;
+                }
+                
+                // For now, just validate the format - server will verify the actual OTP
+                hideError('otp');
+                return true;
+            }
+
+            // Initial state
+            // Make card fields required since only card payment is available
+            cardDetailsSection.querySelectorAll('input').forEach(input => {
+                input.setAttribute('required', 'required');
+            });
+            updatePaymentDetails(); // Initial calculation
+
+            // --- Card Validation Event Listeners ---
+            const cardNumberInput = document.getElementById('card_number');
+            const cardExpiryInput = document.getElementById('card_expiry');
+            const cardCvcInput = document.getElementById('card_cvc');
+            const cardholderNameInput = document.getElementById('cardholder_name');
+
+            // Card number formatting and validation
+            if (cardNumberInput) {
+                cardNumberInput.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+                    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+                    if (formattedValue !== e.target.value) {
+                        e.target.value = formattedValue;
+                    }
+                    
+                    if (value.length >= 13) {
+                        if (validateCardNumber(e.target.value)) {
+                            hideError('card_number');
+                        } else {
+                            showError('card_number', 'Invalid card number');
+                        }
+                    } else {
+                        hideError('card_number');
+                    }
+                });
+            }
+
+            // Expiry date formatting and validation
+            if (cardExpiryInput) {
+                cardExpiryInput.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length >= 2) {
+                        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                    }
+                    e.target.value = value;
+                    
+                    if (value.length === 5) {
+                        if (validateExpiryDate(value)) {
+                            hideError('card_expiry');
+                        } else {
+                            showError('card_expiry', 'Invalid or expired date');
+                        }
+                    } else {
+                        hideError('card_expiry');
+                    }
+                });
+            }
+
+            // CVC validation
+            if (cardCvcInput) {
+                cardCvcInput.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    if (e.target.value.length >= 3) {
+                        if (validateCVC(e.target.value)) {
+                            hideError('card_cvc');
+                        } else {
+                            showError('card_cvc', 'Invalid CVC');
+                        }
+                    } else {
+                        hideError('card_cvc');
+                    }
+                });
+            }
+
+            // Cardholder name validation
+            if (cardholderNameInput) {
+                cardholderNameInput.addEventListener('input', function(e) {
+                    if (e.target.value.length >= 2) {
+                        if (validateCardholderName(e.target.value)) {
+                            hideError('cardholder_name');
+                        } else {
+                            showError('cardholder_name', 'Invalid name format');
+                        }
+                    } else {
+                        hideError('cardholder_name');
+                    }
+                });
+            }
+
+            // --- OTP Event Listeners ---
+            const verifyOtpBtn = document.getElementById('verify_otp_btn');
+            const resendOtpBtn = document.getElementById('resend_otp_btn');
+
             if (verifyOtpBtn) {
                 verifyOtpBtn.addEventListener('click', function() {
-                    const otp = Array.from(otpInputs).map(input => input.value).join('');
-
-                    if (otp.length !== 6) {
-                        showOtpMessage('Please enter a complete 6-digit OTP.');
-                        return;
+                    if (verifyOTP()) {
+                        // OTP verified, proceed with payment
+                        processPayment();
                     }
-
-                    if (!currentTransactionId) {
-                        showOtpMessage('No active transaction found. Please restart the order process.');
-                        return;
-                    }
-
-                    verifyOtpBtn.disabled = true;
-                    verifyOtpBtn.textContent = 'Verifying...';
-
-                    const otpFormData = new FormData();
-                    otpFormData.append('action', 'verify_otp');
-                    otpFormData.append('otp', otp);
-                    otpFormData.append('transaction_id', currentTransactionId);
-
-                    fetch('../handlers/process_order.php', { // Path from public/ to handlers/
-                        method: 'POST',
-                        body: otpFormData
-                    })
-                    .then(response => {
-                        if (!response.ok) { 
-                            console.error('HTTP Error:', response.status, response.statusText);
-                            return response.text().then(text => { throw new Error('Server responded with status ' + response.status + ': ' + text); });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        verifyOtpBtn.disabled = false;
-                        verifyOtpBtn.textContent = 'Verify OTP';
-
-                        if (data.success) {
-                            showOtpMessage(data.message || 'OTP verified! Order confirmed.', true);
-                            setTimeout(() => {
-                                closeOtpModal();
-                                window.location.href = `order_confirmation.php?order_id=${data.order_id}`;
-                            }, 1000);
-                        } else {
-                            showOtpMessage(data.message || 'Invalid OTP. Please try again.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error during OTP verification:', error);
-                        verifyOtpBtn.disabled = false;
-                        verifyOtpBtn.textContent = 'Verify OTP';
-                        showOtpMessage('A network error occurred during OTP verification.');
-                    });
                 });
             }
 
-            // --- Resend OTP Logic ---
             if (resendOtpBtn) {
                 resendOtpBtn.addEventListener('click', function() {
-                    if (!currentTransactionId) {
-                        showOtpMessage('No active transaction to resend OTP for.');
-                        return;
-                    }
-
-                    resendOtpBtn.disabled = true;
-                    resendOtpBtn.textContent = 'Resending...';
-
-                    const resendFormData = new FormData();
-                    resendFormData.append('action', 'resend_otp');
-                    resendFormData.append('transaction_id', currentTransactionId);
-
-                    fetch('../handlers/process_order.php', { // Path from public/ to handlers/
-                        method: 'POST',
-                        body: resendFormData
-                    })
-                    .then(response => {
-                        if (!response.ok) { 
-                            console.error('HTTP Error:', response.status, response.statusText);
-                            return response.text().then(text => { throw new Error('Server responded with status ' + response.status + ': ' + text); });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        resendOtpBtn.disabled = false;
-                        resendOtpBtn.textContent = 'Resend OTP';
-                        if (data.success) {
-                            showOtpMessage(data.message || 'New OTP sent!', true);
-                            otpInputs.forEach(input => input.value = ''); // Clear OTP inputs
-                            otpInputs[0].focus();
-                        } else {
-                            showOtpMessage(data.message || 'Failed to resend OTP.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error resending OTP:', error);
-                        resendOtpBtn.disabled = false;
-                        resendOtpBtn.textContent = 'Resend OTP';
-                        showOtpMessage('A network error occurred during OTP resend.');
-                    });
+                    sendOTP();
+                    this.disabled = true;
                 });
             }
+
+            // --- Payment Processing ---
+            function processPayment() {
+                // Validate all card fields before proceeding
+                const cardNumber = cardNumberInput.value;
+                const cardExpiry = cardExpiryInput.value;
+                const cardCvc = cardCvcInput.value;
+                const cardholderName = cardholderNameInput.value;
+                const otpCode = document.getElementById('otp_code').value;
+                const otpSection = document.getElementById('otp-section');
+
+                let isValid = true;
+
+                if (!validateCardNumber(cardNumber)) {
+                    showError('card_number', 'Invalid card number');
+                    isValid = false;
+                }
+                if (!validateExpiryDate(cardExpiry)) {
+                    showError('card_expiry', 'Invalid or expired date');
+                    isValid = false;
+                }
+                if (!validateCVC(cardCvc)) {
+                    showError('card_cvc', 'Invalid CVC');
+                    isValid = false;
+                }
+                if (!validateCardholderName(cardholderName)) {
+                    showError('cardholder_name', 'Invalid name format');
+                    isValid = false;
+                }
+                
+                // Only validate OTP if OTP section is visible
+                if (otpSection.style.display !== 'none' && otpCode.length !== 6) {
+                    showError('otp', 'Please enter a 6-digit OTP');
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    alert('Please fix the errors above before proceeding.');
+                    return;
+                }
+
+                // Add transaction ID to form data if OTP section is visible
+                const form = document.getElementById('checkoutForm');
+                if (otpSection.style.display !== 'none') {
+                    // Add transaction ID
+                    const transactionInput = document.createElement('input');
+                    transactionInput.type = 'hidden';
+                    transactionInput.name = 'transaction_id';
+                    transactionInput.value = window.currentTransactionId || '';
+                    form.appendChild(transactionInput);
+                }
+
+                // Submit the form
+                form.submit();
+            }
+
+            // Event listeners
+            if (paymentMethodSelect) {
+                paymentMethodSelect.addEventListener('change', updatePaymentDetails);
+            }
+            
+            // Quantity change listener
+            const quantityInput = document.getElementById('quantity');
+            if (quantityInput) {
+                quantityInput.addEventListener('change', updatePaymentDetails);
+                quantityInput.addEventListener('input', updatePaymentDetails);
+            }
+
+            // Single form submission handler
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Check if OTP section is visible (meaning OTP was sent)
+                    const otpSection = document.getElementById('otp-section');
+                    if (otpSection.style.display === 'none') {
+                        // OTP not sent yet, send it first
+                        sendOTP();
+                    } else {
+                        // OTP section is visible, verify OTP first
+                        const otpCode = document.getElementById('otp_code').value;
+                        if (otpCode.length === 6) {
+                            // OTP entered, proceed with payment
+                            processPayment();
+                        } else {
+                            showError('otp', 'Please enter a 6-digit OTP');
+                        }
+                    }
+                });
+            }
+
         });
     </script>
 

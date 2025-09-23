@@ -1,5 +1,14 @@
 <?php
-require_once '../config/Database.php';
+// Try different paths to find Database.php
+if (file_exists('../config/Database.php')) {
+    require_once '../config/Database.php';
+} elseif (file_exists('config/Database.php')) {
+    require_once 'config/Database.php';
+} elseif (file_exists(__DIR__ . '/../config/Database.php')) {
+    require_once __DIR__ . '/../config/Database.php';
+} else {
+    throw new Exception('Database.php file not found');
+}
 
 class NotificationManager {
     private $db;
@@ -42,19 +51,21 @@ class NotificationManager {
     }
 
     /** Insert a notification */
-    private function insertNotification($userId, $title, $message, $type, $relatedId, $senderId = null) {
+    private function insertNotification($userId, $title, $message, $type, $relatedId, $priority = 'medium', $actionUrl = null, $relatedType = null) {
         try {
             $stmt = $this->db->prepare(
-                "INSERT INTO {$this->table} (user_id, sender_id, title, message, type, related_id, created_at)
-                 VALUES (:user_id, :sender_id, :title, :message, :type, :related_id, NOW())"
+                "INSERT INTO {$this->table} (user_id, title, message, type, priority, action_url, related_id, related_type, created_at)
+                 VALUES (:user_id, :title, :message, :type, :priority, :action_url, :related_id, :related_type, NOW())"
             );
             return $stmt->execute([
                 ':user_id' => $userId,
-                ':sender_id' => $senderId,
                 ':title' => $title,
                 ':message' => $message,
                 ':type' => $type,
-                ':related_id' => $relatedId
+                ':priority' => $priority,
+                ':action_url' => $actionUrl,
+                ':related_id' => $relatedId,
+                ':related_type' => $relatedType
             ]);
         } catch (Exception $e) {
             error_log("Notification insert failed: " . $e->getMessage());
@@ -69,7 +80,7 @@ class NotificationManager {
         $customerName = $stmt->fetchColumn();
 
         $message = "New quotation request from {$customerName} for project: {$projectTitle}";
-        return $this->insertNotification($providerId, 'New Quotation Request', $message, 'quotation_request', $quotationId, $customerId);
+        return $this->insertNotification($providerId, 'New Quotation Request', $message, 'quotation', $quotationId, 'high', null, 'quotation');
     }
 
     /** Notify all providers about a new quotation request */
@@ -78,7 +89,7 @@ class NotificationManager {
         $stmt->execute([':id' => $customerId]);
         $customerName = $stmt->fetchColumn();
 
-        $providersStmt = $this->db->prepare("SELECT id FROM users WHERE user_role = 'provider'");
+        $providersStmt = $this->db->prepare("SELECT id FROM users WHERE role = 'provider'");
         $providersStmt->execute();
         $providers = $providersStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -87,9 +98,11 @@ class NotificationManager {
                 $provider['id'],
                 'New Quotation Request',
                 "New quotation request from {$customerName} for project: {$projectTitle}",
-                'quotation_request',
+                'quotation',
                 $quotationId,
-                $customerId
+                'high',
+                null,
+                'quotation'
             );
         }
         return true;
@@ -101,8 +114,8 @@ class NotificationManager {
         $stmt->execute([':id' => $providerId]);
         $providerName = $stmt->fetchColumn();
 
-        $message = "{$providerName} has submitted a quotation for RM{$amount}";
-        return $this->insertNotification($customerId, 'New Quotation Received', $message, 'quotation_submitted', $quotationId, $providerId);
+        $message = "{$providerName} has submitted a quotation for Rs{$amount}";
+        return $this->insertNotification($customerId, 'New Quotation Received', $message, 'quotation', $quotationId, 'high', null, 'quotation');
     }
 
     /** Notify provider that customer accepted the quotation */
@@ -112,7 +125,7 @@ class NotificationManager {
         $customerName = $stmt->fetchColumn();
 
         $message = "{$customerName} has accepted your quotation for project: {$projectTitle}";
-        return $this->insertNotification($providerId, 'Quotation Accepted', $message, 'quotation_accepted', $quotationId, $customerId);
+        return $this->insertNotification($providerId, 'Quotation Accepted', $message, 'quotation', $quotationId, 'high', null, 'quotation');
     }
 
     /** Notify provider that customer rejected the quotation */
@@ -124,6 +137,45 @@ class NotificationManager {
         $message = "{$customerName} has rejected your quotation for project: {$projectTitle}";
         if ($reason) $message .= ". Reason: {$reason}";
 
-        return $this->insertNotification($providerId, 'Quotation Rejected', $message, 'quotation_rejected', $quotationId, $customerId);
+        return $this->insertNotification($providerId, 'Quotation Rejected', $message, 'quotation', $quotationId, 'medium', null, 'quotation');
+    }
+
+    /** Notify all customers about a new product */
+    public function notifyAllCustomersAboutNewProduct($productId, $productName, $productCategory, $productPrice) {
+        try {
+            // Get all customers
+            $customersStmt = $this->db->prepare("SELECT id FROM users WHERE role = 'customer' AND status = 'active'");
+            $customersStmt->execute();
+            $customers = $customersStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $successCount = 0;
+            $formattedPrice = 'Rs. ' . number_format($productPrice, 0, '.', ',');
+            $actionUrl = "../public/product.php?service=interior-design&category={$productCategory}";
+            
+            foreach ($customers as $customer) {
+                $title = 'New Product Available!';
+                $message = "Check out our new {$productCategory} product: {$productName} - {$formattedPrice}";
+                
+                if ($this->insertNotification(
+                    $customer['id'], 
+                    $title, 
+                    $message, 
+                    'general', 
+                    $productId,
+                    'medium',
+                    $actionUrl,
+                    'product'
+                )) {
+                    $successCount++;
+                }
+            }
+            
+            error_log("Product notification sent to {$successCount} customers for product: {$productName}");
+            return $successCount;
+            
+        } catch (Exception $e) {
+            error_log("Failed to notify customers about new product: " . $e->getMessage());
+            return false;
+        }
     }
 }

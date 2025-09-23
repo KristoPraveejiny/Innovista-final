@@ -26,8 +26,8 @@ $orders = [];
 $error_message = '';
 
 try {
-    // Fetch all orders for the logged-in customer, including advance_amount and balance_due
-    $stmt = $conn->prepare("SELECT id, order_date, total_amount, advance_amount, balance_due, status, payment_method FROM orders WHERE user_id = :user_id ORDER BY order_date DESC");
+    // Fetch all orders for the logged-in customer
+    $stmt = $conn->prepare("SELECT id, created_at as order_date, total_amount, status, payment_method FROM orders WHERE user_id = :user_id ORDER BY created_at DESC");
     $stmt->bindParam(':user_id', $customer_id, PDO::PARAM_INT);
     $stmt->execute();
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);

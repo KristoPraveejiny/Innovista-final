@@ -107,8 +107,13 @@ $service_types = $productClass->getServiceTypes();
                                     <div class="product-rating"><?php echo Product::generateStarRating($product['rating']); ?></div>
                                     <div class="price-section">
                                         <span class="price"><?php echo Product::formatPrice($product['price']); ?></span>
-                                        <button class="btn-add-cart" data-product-id="<?php echo $product['id']; ?>">
-                                            <i class="fas fa-shopping-cart"></i>
+                                        <button class="btn-purchase" 
+                                                data-product-id="<?php echo $product['id']; ?>"
+                                                data-product-name="<?php echo htmlspecialchars($product['name']); ?>"
+                                                data-product-price="<?php echo $product['price']; ?>"
+                                                data-image-path="<?php echo Product::getImagePath($product['image_url']); ?>"
+                                                title="Buy Now">
+                                            <i class="fas fa-credit-card"></i> Buy Now
                                         </button>
                                     </div>
                                 </div>
@@ -140,8 +145,13 @@ $service_types = $productClass->getServiceTypes();
                                     <div class="product-rating"><?php echo Product::generateStarRating($product['rating']); ?></div>
                                     <div class="price-section">
                                         <span class="price"><?php echo Product::formatPrice($product['price']); ?></span>
-                                        <button class="btn-add-cart" data-product-id="<?php echo $product['id']; ?>">
-                                            <i class="fas fa-shopping-cart"></i>
+                                        <button class="btn-purchase" 
+                                                data-product-id="<?php echo $product['id']; ?>"
+                                                data-product-name="<?php echo htmlspecialchars($product['name']); ?>"
+                                                data-product-price="<?php echo $product['price']; ?>"
+                                                data-image-path="<?php echo Product::getImagePath($product['image_url']); ?>"
+                                                title="Buy Now">
+                                            <i class="fas fa-credit-card"></i> Buy Now
                                         </button>
                                     </div>
                                 </div>
@@ -212,5 +222,4 @@ $service_types = $productClass->getServiceTypes();
 <?php 
 include 'footer.php'; 
 ?>
-<script src="assets/js/product-script.js"></script>
-?>
+<script src="assets/js/product-script.js"></script>?>

@@ -266,11 +266,31 @@ class Product {
             return ($context === 'admin') ? '../public/assets/images/placeholder.jpg' : 'assets/images/placeholder.jpg';
         }
         
-        if ($context === 'admin') {
-            return '../' . $image_url;
+        // Handle external URLs (like Unsplash)
+        if (filter_var($image_url, FILTER_VALIDATE_URL)) {
+            return $image_url;
         }
         
-        return $image_url;
+        // Handle different path formats
+        if ($context === 'admin') {
+            // For admin context, we need to go up one level from admin/ directory
+            if (str_starts_with($image_url, 'uploads/')) {
+                return '../public/' . $image_url;
+            } elseif (str_starts_with($image_url, 'assets/')) {
+                return '../public/' . $image_url;
+            } else {
+                return '../' . $image_url;
+            }
+        } else {
+            // For public context
+            if (str_starts_with($image_url, 'uploads/')) {
+                return $image_url;
+            } elseif (str_starts_with($image_url, 'assets/')) {
+                return $image_url;
+            } else {
+                return $image_url;
+            }
+        }
     }
 }
 ?>

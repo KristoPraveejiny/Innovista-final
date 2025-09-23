@@ -2,16 +2,36 @@
 require_once 'admin_header.php';
 require_once '../config/Database.php';
 require_once '../classes/Product.php';
+require_once '../classes/NotificationManager.php';
 
 // Initialize database connection and product class
 $database = new Database();
 $conn = $database->getConnection();
 $productClass = new Product($conn);
+$notificationManager = new NotificationManager($conn);
 
 // Handle actions
 $action = $_GET['action'] ?? 'list';
 $message = '';
 $message_type = '';
+
+// Handle success messages from redirects
+if (isset($_GET['message']) && isset($_GET['type'])) {
+    switch ($_GET['message']) {
+        case 'updated':
+            $message = 'Product updated successfully!';
+            break;
+        case 'added':
+            $message = 'Product added successfully! All customers have been notified about the new product.';
+            break;
+        case 'deleted':
+            $message = 'Product deleted successfully!';
+            break;
+        default:
+            $message = '';
+    }
+    $message_type = $_GET['type'];
+}
 
 // Handle image upload
 function handleImageUpload($file, $product_id = null) {
@@ -21,7 +41,9 @@ function handleImageUpload($file, $product_id = null) {
     
     $upload_dir = '../public/uploads/products/';
     if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0777, true);
+        if (!mkdir($upload_dir, 0777, true)) {
+            return false;
+        }
     }
     
     $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
@@ -47,10 +69,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Handle image upload first
         $image_url = $_POST['image_url'] ?? ''; // Keep existing image if no new upload
         
-        if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
+        // Only process new image upload if a file was actually uploaded
+        if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK && !empty($_FILES['product_image']['name'])) {
             $uploaded_image = handleImageUpload($_FILES['product_image'], $_POST['product_id'] ?? null);
             if ($uploaded_image) {
                 $image_url = $uploaded_image;
+            } else {
+                // If image upload failed, keep the existing image
+                $image_url = $_POST['image_url'] ?? '';
             }
         }
         
@@ -71,8 +97,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ];
                 
                 if ($productClass->addProduct($product_data)) {
-                    $message = 'Product added successfully!';
-                    $message_type = 'success';
+                    // Get the newly added product ID for notifications
+                    $newProductId = $conn->lastInsertId();
+                    
+                    // Send notifications to all customers about the new product
+                    $notificationCount = $notificationManager->notifyAllCustomersAboutNewProduct(
+                        $newProductId,
+                        $product_data['name'],
+                        $product_data['category'],
+                        $product_data['price']
+                    );
+                    
+                    // Redirect to product list after successful add
+                    header('Location: manage_products.php?message=added&type=success');
+                    exit();
                 } else {
                     $message = 'Failed to add product.';
                     $message_type = 'error';
@@ -96,8 +134,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ];
                 
                 if ($productClass->updateProduct($product_id, $product_data)) {
-                    $message = 'Product updated successfully!';
-                    $message_type = 'success';
+                    // Redirect to product list after successful update
+                    header('Location: manage_products.php?message=updated&type=success');
+                    exit();
                 } else {
                     $message = 'Failed to update product.';
                     $message_type = 'error';
@@ -111,8 +150,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (isset($_GET['delete'])) {
     $product_id = $_GET['delete'];
     if ($productClass->deleteProduct($product_id)) {
-        $message = 'Product deleted successfully!';
-        $message_type = 'success';
+        // Redirect to product list after successful delete
+        header('Location: manage_products.php?message=deleted&type=success');
+        exit();
     } else {
         $message = 'Failed to delete product.';
         $message_type = 'error';
@@ -151,10 +191,6 @@ if (isset($_GET['edit'])) {
                     <i class="fas fa-plus"></i>
                     <span>Add New Product</span>
                 </button>
-                <a href="?action=export" class="btn btn-secondary btn-icon">
-                    <i class="fas fa-download"></i>
-                    <span>Export</span>
-                </a>
             </div>
         </div>
 
