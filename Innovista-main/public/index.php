@@ -12,6 +12,30 @@
     // ---------------------------------------------------
 
     // --- Fetch Dynamic Settings for the Homepage ---
+    // --- Fetch Dynamic Achievements/Stats ---
+    // 1. Projects Completed
+    $projectsCompleted = 0;
+    try {
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM project WHERE status = 'completed'");
+        $stmt->execute();
+        $projectsCompleted = (int)$stmt->fetchColumn();
+    } catch (PDOException $e) { $projectsCompleted = 0; }
+
+    // 2. Happy Clients (active customers)
+    $happyClients = 0;
+    try {
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM users WHERE role = 'customer' AND status = 'active'");
+        $stmt->execute();
+        $happyClients = (int)$stmt->fetchColumn();
+    } catch (PDOException $e) { $happyClients = 0; }
+
+    // 3. Verified Professionals (active providers)
+    $verifiedProfessionals = 0;
+    try {
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM users WHERE role = 'provider' AND status = 'active'");
+        $stmt->execute();
+        $verifiedProfessionals = (int)$stmt->fetchColumn();
+    } catch (PDOException $e) { $verifiedProfessionals = 0; }
     $settings = [];
     try {
         $stmt_settings = $conn->prepare("SELECT setting_key, setting_value FROM settings");
@@ -305,15 +329,15 @@
     <section class="achievements">
         <div class="container achievements-grid">
             <div class="achievement-item">
-                <h3 class="counter" data-goal="50">0</h3> <!-- Example data-goal, could fetch from DB -->
+                <h3 class="counter" data-goal="<?php echo $projectsCompleted; ?>"><?php echo $projectsCompleted; ?></h3>
                 <p>Projects Completed</p>
             </div>
             <div class="achievement-item">
-                <h3 class="counter" data-goal="30">0</h3>
+                <h3 class="counter" data-goal="<?php echo $happyClients; ?>"><?php echo $happyClients; ?></h3>
                 <p>Happy Clients</p>
             </div>
             <div class="achievement-item">
-                <h3 class="counter" data-goal="15">0</h3>
+                <h3 class="counter" data-goal="<?php echo $verifiedProfessionals; ?>"><?php echo $verifiedProfessionals; ?></h3>
                 <p>Verified Professionals</p>
             </div>
         </div>
@@ -334,7 +358,7 @@
                             <div class="provider-info">
                                 <h4><?php echo htmlspecialchars($provider['name']); ?></h4>
                                 <p><?php echo htmlspecialchars(substr($provider['bio'] ?? 'Specialist', 0, 50)) . (strlen($provider['bio'] ?? '') > 50 ? '...' : ''); ?></p>
-                                <a href="provider_profile.php?id=<?php echo htmlspecialchars($provider['id']); ?>" class="btn btn-link">View Profile</a>
+                                <a href="../public/signup.php?php echo htmlspecialchars($provider['id']); ?>" class="btn btn-link">View Proifile</a>
                             </div>
                         </div>
                     <?php endforeach; ?>
