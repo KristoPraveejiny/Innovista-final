@@ -123,7 +123,7 @@
                 <div class="contact-info">
                     <h4><i class="fas fa-headset"></i> Need Help?</h4>
                     <p><strong>Email:</strong> support@innovista.com</p>
-                    <p><strong>Phone:</strong> +1 (555) 123-4567</p>
+                    <p><strong>Phone:</strong> 077 123-4567</p>
                 </div>
             </div>
             <div class="modal-footer">

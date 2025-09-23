@@ -96,7 +96,7 @@ if (!$quote) {
 			</div>
 		</div>
 		<div class="form-group-pro">
-			<label for="validity">Validity Period for Final Payment (days)</label>
+			<label for="validity">Validity Period For Project</label>
 			<input type="number" name="validity" id="validity" required min="1" placeholder="e.g. 30">
 		</div>
 		<div class="form-group-pro">
