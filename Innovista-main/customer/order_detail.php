@@ -34,9 +34,8 @@ if (!$order_id) {
 }
 
 try {
-    // Fetch specific order details for the logged-in customer, including new payment fields
-    // Ensure new columns advance_amount, balance_due, payment_terms are selected
-    $stmt = $conn->prepare("SELECT id, order_date, total_amount, advance_amount, balance_due, status, payment_method, payment_terms, transaction_id, shipping_name, shipping_address, shipping_city, shipping_zip, shipping_phone, shipping_email, billing_name, billing_address, billing_city, billing_zip FROM orders WHERE id = :order_id AND user_id = :user_id");
+    // Fetch specific order details for the logged-in customer
+    $stmt = $conn->prepare("SELECT id, created_at, total_amount, status, payment_method, transaction_id, shipping_address FROM orders WHERE id = :order_id AND user_id = :user_id");
     $stmt->bindParam(':order_id', $order_id, PDO::PARAM_INT);
     $stmt->bindParam(':user_id', $customer_id, PDO::PARAM_INT);
     $stmt->execute();
@@ -86,7 +85,7 @@ try {
         <div class="content-card">
             <div class="order-summary-header">
                 <h3>Order #<?php echo htmlspecialchars($order_data['id']); ?></h3>
-                <p>Date: <?php echo htmlspecialchars(date('d M Y, H:i', strtotime($order_data['order_date']))); ?></p>
+                <p>Date: <?php echo htmlspecialchars(date('d M Y, H:i', strtotime($order_data['created_at']))); ?></p>
                 <p>Status: <span class="status-badge status-<?php echo htmlspecialchars(strtolower(str_replace('_', '-', $order_data['status']))); ?>"><?php echo htmlspecialchars(ucwords(str_replace('_', ' ', $order_data['status']))); ?></span></p>
             </div>
 
@@ -109,7 +108,24 @@ try {
                             <?php foreach ($order_items as $item): ?>
                                 <tr>
                                     <td style="display:flex; align-items:center; gap:10px;">
-                                        <img src="<?php echo htmlspecialchars($item['image_path']); ?>" alt="<?php echo htmlspecialchars($item['product_name']); ?>" style="width:50px; height:50px; object-fit:cover; border-radius:4px;">
+                                        <?php 
+                                        // Simple approach - test with a known working image first
+                                        $testImage = '../assets/images/placeholder.jpg';
+                                        $originalPath = $item['image_path'];
+                                        $imagePath = '../' . $originalPath;
+                                        ?>
+                                        
+                                        <!-- Test with placeholder first -->
+                                        <img src="<?php echo $testImage; ?>" 
+                                             alt="<?php echo htmlspecialchars($item['product_name']); ?>" 
+                                             style="width:50px; height:50px; object-fit:cover; border-radius:4px;">
+                                        
+                                        <!-- Debug info -->
+                                        <div style="font-size:10px; color:#666;">
+                                            DB Path: <?php echo $originalPath; ?><br>
+                                            Full Path: <?php echo $imagePath; ?><br>
+                                            File exists: <?php echo file_exists('public/' . $originalPath) ? 'Yes' : 'No'; ?>
+                                        </div>
                                         <?php echo htmlspecialchars($item['product_name']); ?>
                                     </td>
                                     <td><?php echo !empty($item['color']) ? htmlspecialchars($item['color']) : 'N/A'; ?></td>
@@ -126,41 +142,20 @@ try {
             <div class="shipping-billing-details" style="margin-top: 2rem; display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
                 <div>
                     <h3>Shipping Address</h3>
-                    <p><strong>Name:</strong> <?php echo htmlspecialchars($order_data['shipping_name']); ?></p>
                     <p><strong>Address:</strong> <?php echo htmlspecialchars($order_data['shipping_address']); ?></p>
-                    <p><strong>City:</strong> <?php echo htmlspecialchars($order_data['shipping_city']); ?></p>
-                    <p><strong>Zip:</strong> <?php echo htmlspecialchars($order_data['shipping_zip']); ?></p>
-                    <p><strong>Phone:</strong> <?php echo htmlspecialchars($order_data['shipping_phone']); ?></p>
-                    <p><strong>Email:</strong> <?php echo htmlspecialchars($order_data['shipping_email']); ?></p>
                 </div>
                 <div>
-                    <h3>Billing & Payment</h3>
-                    <?php if ($order_data['billing_name']): ?>
-                        <p><strong>Billing Name:</strong> <?php echo htmlspecialchars($order_data['billing_name']); ?></p>
-                        <p><strong>Billing Address:</strong> <?php echo htmlspecialchars($order_data['billing_address']); ?></p>
-                        <p><strong>Billing City:</strong> <?php echo htmlspecialchars($order_data['billing_city']); ?></p>
-                        <p><strong>Billing Zip:</strong> <?php echo htmlspecialchars($order_data['billing_zip']); ?></p>
-                    <?php else: ?>
-                        <p>Billing address same as shipping.</p>
-                    <?php endif; ?>
-                    <h4 style="margin-top: 1rem;">Payment Summary</h4>
+                    <h3>Payment Summary</h3>
                     <p><strong>Payment Method:</strong> <?php echo htmlspecialchars(ucfirst($order_data['payment_method'])); ?></p>
-                    <p><strong>Payment Terms:</strong> <?php echo htmlspecialchars(ucwords(str_replace('_', ' ', $order_data['payment_terms']))); ?></p>
                     <?php if ($order_data['transaction_id']): ?>
-                        <p><strong>Transaction ID (Advance):</strong> <?php echo htmlspecialchars($order_data['transaction_id']); ?></p>
+                        <p><strong>Transaction ID:</strong> <?php echo htmlspecialchars($order_data['transaction_id']); ?></p>
                     <?php endif; ?>
-                    <p style="margin-top:0.5rem;"><strong>Cart Total:</strong> Rs. <?php echo htmlspecialchars(number_format($order_data['total_amount'], 2)); ?></p>
-                    <p><strong>Advance Paid:</strong> Rs. <?php echo htmlspecialchars(number_format($order_data['advance_amount'], 2)); ?></p>
-                    <p style="color: <?php echo ($order_data['balance_due'] > 0) ? '#dc3545' : '#28a745'; ?>;">
-                        <strong>Balance Due:</strong> Rs. <?php echo htmlspecialchars(number_format($order_data['balance_due'], 2)); ?>
-                    </p>
+                    <p style="margin-top:0.5rem;"><strong>Total Amount:</strong> Rs. <?php echo htmlspecialchars(number_format($order_data['total_amount'], 2)); ?></p>
+                    <p><strong>Status:</strong> <span style="color: #28a745;"><?php echo htmlspecialchars(ucfirst($order_data['status'])); ?></span></p>
                 </div>
             </div>
 
             <div class="action-buttons" style="margin-top: 2rem; text-align:right;">
-                <?php if ($order_data['status'] === 'advance_paid' && $order_data['balance_due'] > 0): ?>
-                    <a href="pay_balance.php?order_id=<?php echo htmlspecialchars($order_data['id']); ?>" class="btn btn-primary" style="background-color:#0d9488; color:white; margin-right:1rem;">Pay Balance Now</a>
-                <?php endif; ?>
                 <a href="my_orders.php" class="btn btn-secondary">Back to My Orders</a>
                 <!-- You could add a "Reorder" or "Download Invoice" button here -->
             </div>

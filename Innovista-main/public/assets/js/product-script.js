@@ -565,15 +565,53 @@ document.addEventListener('DOMContentLoaded', () => {
         if(cartCloseBtn) cartCloseBtn.addEventListener('click', () => cartSidebar.classList.remove('active'));
     }
 
-    // --- Add to Cart Event Listener (Delegated) ---
+    // --- Direct Purchase Event Listener ---
     document.body.addEventListener('click', function(e) {
-        const addButton = e.target.closest('.btn-add-cart, .btn-add-cart-modal, .painting-purchase-btn');
-        if (addButton) {
+        const purchaseButton = e.target.closest('.btn-purchase, .btn-add-cart-modal, .painting-purchase-btn');
+        if (purchaseButton) {
             e.preventDefault();
 
             if (!isUserLoggedIn) {
                 window.location.href = 'login.php';
                 return;
+            }
+
+            // Handle direct purchase
+            if (purchaseButton.classList.contains('btn-purchase')) {
+                const productId = purchaseButton.dataset.productId;
+                const productName = purchaseButton.dataset.productName;
+                const productPrice = parseFloat(purchaseButton.dataset.productPrice);
+                const imagePath = purchaseButton.dataset.imagePath;
+                
+                if (productId && productName && !isNaN(productPrice)) {
+                    // Store product data in session for checkout
+                    const productData = {
+                        id: productId,
+                        name: productName,
+                        price: productPrice,
+                        image_path: imagePath,
+                        quantity: 1, // Default quantity, will be updated in checkout
+                        color: ''
+                    };
+                    
+                    // Send to checkout with product data
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'checkout.php';
+                    
+                    const productInput = document.createElement('input');
+                    productInput.type = 'hidden';
+                    productInput.name = 'product_data';
+                    productInput.value = JSON.stringify(productData);
+                    form.appendChild(productInput);
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                    return;
+                } else {
+                    alert('Could not get complete product information.');
+                    return;
+                }
             }
 
             let dbProductId, productName, productPrice, imagePath, color = '', quantity = 1;
