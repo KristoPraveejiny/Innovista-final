@@ -30,7 +30,11 @@ if (!$provider) {
 
 
 <!-- Flash message for profile update -->
-
+<?php if (function_exists('display_flash_message')): ?>
+<div class="flash-message-container">
+    <?php display_flash_message(); ?>
+</div>
+<?php endif; ?>
 
 
 <div class="profile-page-wrapper">

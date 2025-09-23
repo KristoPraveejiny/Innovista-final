@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_details']) ||
         $stmt->bindParam(':provider_id', $provider_id);
         $stmt->execute();
         set_flash_message('success', 'Services updated successfully!');
-        header('Location: my_profile.php');
+        header('Location: provider_dashboard.php');
         exit();
     } else {
         $stmt = $db->prepare('UPDATE service SET provider_name = :company_name, provider_phone = :phone, provider_address = :bio, provider_bio = :provider_bio WHERE provider_id = :provider_id');
@@ -72,10 +72,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['update_details']) ||
     }
 
     set_flash_message('success', 'Profile updated successfully!');
-    header('Location: my_profile.php');
+    header('Location: provider_dashboard.php');
     exit();
 } else {
     set_flash_message('error', 'Invalid request.');
-    header('Location: my_profile.php');
+    header('Location: provider_dashboard.php');
     exit();
 }

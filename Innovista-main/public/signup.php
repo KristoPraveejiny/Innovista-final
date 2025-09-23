@@ -273,16 +273,28 @@
                             <small style="color: #888;">This is optional during signup, can be added later.</small>
                         </div>
                         <div class="form-group">
-                            <label for="providerService">Main Service(s) (select all that apply)</label>
-                            <select id="providerService" name="providerService[]" multiple>
-                                <option value="Interior Design">Interior Design</option>
-                                <option value="Painting">Painting</option>
-                                <option value="Restoration">Restoration</option>
-                            </select>
+                            <label for="providerService">Main Service (select one)</label>
+                            <div class="service-options">
+                                <label class="service-option">
+                                    <input type="radio" name="providerService" value="Interior Design" id="service_interior">
+                                    <span class="service-radio"></span>
+                                    <span class="service-label">Interior Design</span>
+                                </label>
+                                <label class="service-option">
+                                    <input type="radio" name="providerService" value="Painting" id="service_painting">
+                                    <span class="service-radio"></span>
+                                    <span class="service-label">Painting</span>
+                                </label>
+                                <label class="service-option">
+                                    <input type="radio" name="providerService" value="Restoration" id="service_restoration">
+                                    <span class="service-radio"></span>
+                                    <span class="service-label">Restoration</span>
+                                </label>
+                            </div>
                         </div>
                         <div class="form-group" id="providerSubcategories" style="display:none;">
                             <label>Subcategories (select all that apply):</label>
-                            <div id="subcategoryCheckboxes"></div>
+                            <div id="subcategoryCheckboxes" class="subcategory-grid"></div>
                         </div>
                     </div>
                     
@@ -387,7 +399,7 @@
         const providerPhone = document.getElementById('providerPhone');
         const providerAddress = document.getElementById('providerAddress');
         const providerCV = document.getElementById('providerCV');
-        const providerService = document.getElementById('providerService');
+        const providerServiceRadios = document.querySelectorAll('input[name="providerService"]');
         const subcatContainer = document.getElementById('providerSubcategories');
         const subcatCheckboxes = document.getElementById('subcategoryCheckboxes');
 
@@ -400,7 +412,7 @@
             // Reset all required attributes first
             [customerName, customerEmail, customerPhone, customerAddress, 
              providerFullname, providerEmail, providerBio, providerPhone, providerAddress, 
-             providerCV, providerService].forEach(field => {
+             providerCV].forEach(field => {
                 if (field) field.removeAttribute('required');
             });
             Array.from(subcatCheckboxes.querySelectorAll('input[type="checkbox"]')).forEach(cb => cb.removeAttribute('required'));
@@ -417,7 +429,8 @@
                 providerFullname.required = true;
                 providerEmail.required = true;
                 providerPhone.required = true;
-                providerService.required = true;
+                // At least one service must be selected
+                providerServiceRadios.forEach(radio => radio.required = true);
                 // providerBio, providerAddress, providerCV are optional
             }
         }
@@ -430,8 +443,7 @@
                 providerFields.classList.add('active');
                 customerFields.classList.remove('active');
                 // Manually trigger change for providerService to load subcategories if any are pre-selected
-                const event = new Event('change');
-                providerService.dispatchEvent(event);
+                updateSubcategories();
             }
             setRequiredAttributes(type);
         }
@@ -446,28 +458,39 @@
             });
         });
 
-        providerService.addEventListener('change', function() {
-            const selected = Array.from(this.selectedOptions).map(opt => opt.value);
+        function updateSubcategories() {
+            const selected = Array.from(providerServiceRadios)
+                .filter(radio => radio.checked)
+                .map(radio => radio.value);
+            
             subcatCheckboxes.innerHTML = ''; // Clear previous checkboxes
 
             if (selected.length > 0) {
                 subcatContainer.style.display = 'block';
                 selected.forEach(function(service) {
                     if (subcategories[service]) {
+                        const serviceGroup = document.createElement('div');
+                        serviceGroup.className = 'subcategory-group';
+                        
                         const label = document.createElement('div');
-                        label.style.fontWeight = 'bold';
-                        label.style.marginTop = '10px';
+                        label.className = 'subcategory-group-title';
                         label.textContent = service + ' Subcategories:';
-                        subcatCheckboxes.appendChild(label);
+                        serviceGroup.appendChild(label);
+                        
+                        const subcatGrid = document.createElement('div');
+                        subcatGrid.className = 'subcategory-options';
+                        
                         subcategories[service].forEach(function(subcat) {
                             const id = 'subcat_' + service.replace(/\s+/g, '_') + '_' + subcat.replace(/\s+/g, '_');
                             const checkboxLabel = document.createElement('label');
-                            checkboxLabel.className = 'checkbox-label'; // Add class for styling
+                            checkboxLabel.className = 'subcategory-option';
+                            
                             const checkbox = document.createElement('input');
                             checkbox.type = 'checkbox';
                             checkbox.name = 'providerSubcategories[]';
                             checkbox.value = service + ' - ' + subcat;
                             checkbox.id = id;
+                            
                             // Pre-select if previously submitted (for error re-display)
                             const prevSubcategories = <?php echo json_encode($_SESSION['signup_data']['providerSubcategories'] ?? []); ?>;
                             if (prevSubcategories.includes(service + ' - ' + subcat)) {
@@ -476,13 +499,21 @@
 
                             checkboxLabel.appendChild(checkbox);
                             checkboxLabel.appendChild(document.createTextNode(' ' + subcat));
-                            subcatCheckboxes.appendChild(checkboxLabel);
+                            subcatGrid.appendChild(checkboxLabel);
                         });
+                        
+                        serviceGroup.appendChild(subcatGrid);
+                        subcatCheckboxes.appendChild(serviceGroup);
                     }
                 });
             } else {
                 subcatContainer.style.display = 'none';
             }
+        }
+
+        // Add event listeners to all service radio buttons
+        providerServiceRadios.forEach(function(radio) {
+            radio.addEventListener('change', updateSubcategories);
         });
 
         // Initialize state based on pre-selected user type (e.g., from error re-display)

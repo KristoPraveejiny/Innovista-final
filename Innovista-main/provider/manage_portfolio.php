@@ -13,6 +13,12 @@ $row = $stmt->fetch(PDO::FETCH_ASSOC);
 $portfolio = isset($row['portfolio']) ? ($row['portfolio'] ? explode(',', $row['portfolio']) : []) : [];
 ?>
 
+<!-- Display flash messages -->
+<?php if (function_exists('display_flash_message')): ?>
+<div class="flash-message-container">
+    <?php display_flash_message(); ?>
+</div>
+<?php endif; ?>
 
 <section class="page-section">
     <div class="section-header">

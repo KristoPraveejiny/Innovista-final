@@ -253,5 +253,48 @@ class NotificationManager {
         
         return floor($time/31536000) . ' years ago';
     }
+
+    /**
+     * Create notification for quotation accepted by customer
+     */
+    public function notifyQuotationAccepted($providerId, $customerId, $quotationId, $serviceType) {
+        $title = "Quotation Accepted";
+        $message = "Your quotation for " . $serviceType . " services has been accepted by the customer.";
+        $actionUrl = "../provider/manage_quotations.php";
+        
+        return $this->createNotification(
+            $providerId,
+            $title,
+            $message,
+            'quotation',
+            'high',
+            $actionUrl,
+            $quotationId,
+            'quotation'
+        );
+    }
+
+    /**
+     * Create notification for quotation rejected by customer
+     */
+    public function notifyQuotationRejected($providerId, $customerId, $quotationId, $serviceType, $reason = '') {
+        $title = "Quotation Declined";
+        $message = "Your quotation for " . $serviceType . " services has been declined by the customer.";
+        if (!empty($reason)) {
+            $message .= " Reason: " . $reason;
+        }
+        $actionUrl = "../provider/manage_quotations.php";
+        
+        return $this->createNotification(
+            $providerId,
+            $title,
+            $message,
+            'quotation',
+            'medium',
+            $actionUrl,
+            $quotationId,
+            'quotation'
+        );
+    }
 }
 ?>

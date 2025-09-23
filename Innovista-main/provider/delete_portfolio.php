@@ -43,6 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['photo'])) {
     exit();
 } else {
     set_flash_message('error', 'Invalid request.');
-    header('Location: manage_portfolio.php');
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+    if (strpos($referer, 'my_profile.php') !== false) {
+        header('Location: my_profile.php');
+    } else {
+        header('Location: manage_portfolio.php');
+    }
     exit();
 }

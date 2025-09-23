@@ -531,13 +531,22 @@ $initialBalanceDue = 0; // No balance due for full payment
             }
 
             function sendOTP() {
+                // Get email from the shipping email field
+                const emailField = document.getElementById('shipping_email');
+                const email = emailField ? emailField.value : '';
+                
+                if (!email) {
+                    alert('Please enter your email address first');
+                    return;
+                }
+                
                 // Send OTP request to server
                 fetch('../handlers/send_otp.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: 'action=send_otp'
+                    body: 'action=send_otp&email=' + encodeURIComponent(email)
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -549,10 +558,16 @@ $initialBalanceDue = 0; // No balance due for full payment
                         document.getElementById('otp-section').style.display = 'block';
                         document.getElementById('verify_otp_btn').disabled = false;
                         
+                        // Update OTP message to show which email it was sent to
+                        const otpMessage = document.querySelector('#otp-section p');
+                        if (otpMessage) {
+                            otpMessage.textContent = `We've sent a 6-digit OTP to ${data.email_sent_to || email}. Please enter it below to complete your payment.`;
+                        }
+                        
                         // Start timer (5 minutes)
                         startOTPTimer(300);
                         
-                        alert('OTP sent to your email! For testing, use: ' + data.otp);
+                        alert('OTP sent to ' + (data.email_sent_to || email) + '! Please check your email.');
                     } else {
                         alert('Failed to send OTP: ' + data.message);
                     }

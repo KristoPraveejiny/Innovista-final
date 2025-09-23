@@ -28,10 +28,21 @@
                     <ul>
                         <?php if (isUserLoggedIn()): ?>
                             <!-- Show these links if the user IS logged in -->
-                            <li><a href="dashboard.php">My Dashboard</a></li>
-                            <li><a href="profile.php">My Profile</a></li>
-                            <li><a href="my-projects.php">My Projects</a></li>
-                            <li><a href="logout.php">Logout</a></li>
+                            <?php 
+                            $userRole = getUserRole();
+                            if ($userRole === 'customer'): ?>
+                                <li><a href="../customer/customer_dashboard.php">My Dashboard</a></li>
+                                <li><a href="../customer/my_profile.php">My Profile</a></li>
+                                <li><a href="../customer/my_projects.php">My Projects</a></li>
+                            <?php elseif ($userRole === 'provider'): ?>
+                                <li><a href="../provider/provider_dashboard.php">My Dashboard</a></li>
+                                <li><a href="../provider/my_profile.php">My Profile</a></li>
+                                <li><a href="../provider/my_projects.php">My Projects</a></li>
+                            <?php elseif ($userRole === 'admin'): ?>
+                                <li><a href="../admin/admin_dashboard.php">Admin Dashboard</a></li>
+                                <li><a href="../admin/manage_users.php">Manage Users</a></li>
+                            <?php endif; ?>
+                            <li><a href="./logout.php">Logout</a></li>
                         <?php else: ?>
                             <!-- Show these links if the user IS NOT logged in -->
                             <li><a href="./login.php">Login</a></li>

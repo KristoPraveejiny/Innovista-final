@@ -10,7 +10,31 @@ $count_stmt = $db->prepare('SELECT COUNT(*) FROM quotations WHERE provider_id = 
 $count_stmt->bindParam(':provider_id', $provider_id);
 $count_stmt->execute();
 $new_quote_count = $count_stmt->fetchColumn();
-$stats = [ 'new_requests' => $new_quote_count, 'active_projects' => 2, 'awaiting_payment' => 1, 'total_earnings' => 15750.00 ];
+// Calculate real stats from database
+$active_projects_count = 0;
+$stmt_active = $db->prepare("SELECT COUNT(p.id) as count FROM projects p JOIN custom_quotations cq ON p.quotation_id = cq.id WHERE cq.provider_id = :provider_id AND p.status IN ('in_progress', 'awaiting_final_payment', 'disputed')");
+$stmt_active->bindParam(':provider_id', $provider_id, PDO::PARAM_INT);
+$stmt_active->execute();
+$active_projects_count = $stmt_active->fetch(PDO::FETCH_ASSOC)['count'];
+
+$awaiting_payment_count = 0;
+$stmt_payment = $db->prepare("SELECT COUNT(p.id) as count FROM projects p JOIN custom_quotations cq ON p.quotation_id = cq.id WHERE cq.provider_id = :provider_id AND p.status = 'awaiting_final_payment'");
+$stmt_payment->bindParam(':provider_id', $provider_id, PDO::PARAM_INT);
+$stmt_payment->execute();
+$awaiting_payment_count = $stmt_payment->fetch(PDO::FETCH_ASSOC)['count'];
+
+$total_earnings = 0;
+$stmt_earnings = $db->prepare("SELECT SUM(py.amount) as total_earnings FROM payments py JOIN custom_quotations cq ON py.quotation_id = cq.id WHERE cq.provider_id = :provider_id");
+$stmt_earnings->bindParam(':provider_id', $provider_id, PDO::PARAM_INT);
+$stmt_earnings->execute();
+$total_earnings = $stmt_earnings->fetch(PDO::FETCH_ASSOC)['total_earnings'] ?? 0;
+
+$stats = [ 
+    'new_requests' => $new_quote_count, 
+    'active_projects' => $active_projects_count, 
+    'awaiting_payment' => $awaiting_payment_count, 
+    'total_earnings' => $total_earnings 
+];
 
 // Handle success/error messages from URL parameters
 if (isset($_GET['success'])) {
@@ -22,6 +46,13 @@ if (isset($_GET['error'])) {
     echo "<div class='flash-message-container'><div class='flash-message error'>" . htmlspecialchars($error_message) . "</div></div>";
 }
 
+// Display session-based flash messages
+if (function_exists('display_flash_message')) {
+    echo '<div class="flash-message-container">';
+    display_flash_message();
+    echo '</div>';
+}
+
 // Fetch real quote requests from the database
 $real_quote_requests = [];
 $quote_stmt = $db->prepare('SELECT q.*, u.name as customer_name FROM quotations q JOIN users u ON q.customer_id = u.id WHERE q.provider_id = :provider_id AND (q.status = "Awaiting Quote" OR q.status = "Awaiting Your Quote") ORDER BY q.created_at DESC');
@@ -29,7 +60,29 @@ $quote_stmt->bindParam(':provider_id', $provider_id);
 $quote_stmt->execute();
 $real_quote_requests = $quote_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$active_projects = [ ['customer' => 'Alice Johnson', 'project' => 'Living Room Renovation', 'status' => 'In Progress', 'link' => 'my_projects.php'] ];
+// Fetch real active projects from the database
+$active_projects = [];
+$projects_stmt = $db->prepare('
+    SELECT DISTINCT 
+        u.name as customer_name,
+        q.project_description as project_name,
+        q.status,
+        q.id as quotation_id
+    FROM quotations q 
+    JOIN users u ON q.customer_id = u.id 
+    WHERE q.provider_id = :provider_id 
+    AND q.status IN ("Approved", "In Progress", "Completed")
+    ORDER BY q.created_at DESC
+    LIMIT 5
+');
+$projects_stmt->bindParam(':provider_id', $provider_id);
+$projects_stmt->execute();
+$active_projects = $projects_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Add link to each project
+foreach ($active_projects as &$project) {
+    $project['link'] = 'my_projects.php';
+}
 ?>
 <h2>Provider Dashboard</h2>
 <p>Welcome back, <?php echo $_SESSION['user_name'] ?? 'Provider'; ?>! Manage your business, respond to clients, and showcase your work.</p>
@@ -127,8 +180,8 @@ $active_projects = [ ['customer' => 'Alice Johnson', 'project' => 'Living Room R
                 <tbody>
                     <?php if (!empty($active_projects)): foreach ($active_projects as $project): ?>
                     <tr>
-                        <td><strong><?php echo htmlspecialchars($project['customer']); ?></strong></td>
-                        <td><?php echo htmlspecialchars($project['project']); ?></td>
+                        <td><strong><?php echo htmlspecialchars($project['customer_name']); ?></strong></td>
+                        <td><?php echo htmlspecialchars($project['project_name']); ?></td>
                         <td><span class="status-badge status-active"><?php echo htmlspecialchars($project['status']); ?></span></td>
                         <td><a href="<?php echo $project['link']; ?>" class="btn-view">View Details</a></td>
                     </tr>

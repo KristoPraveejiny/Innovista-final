@@ -109,23 +109,14 @@ try {
                                 <tr>
                                     <td style="display:flex; align-items:center; gap:10px;">
                                         <?php 
-                                        // Simple approach - test with a known working image first
-                                        $testImage = '../assets/images/placeholder.jpg';
                                         $originalPath = $item['image_path'];
-                                        $imagePath = '../' . $originalPath;
+                                        $imagePath = getImageSrc($originalPath);
                                         ?>
                                         
-                                        <!-- Test with placeholder first -->
-                                        <img src="<?php echo $testImage; ?>" 
+                                        <img src="<?php echo $imagePath; ?>" 
                                              alt="<?php echo htmlspecialchars($item['product_name']); ?>" 
-                                             style="width:50px; height:50px; object-fit:cover; border-radius:4px;">
-                                        
-                                        <!-- Debug info -->
-                                        <div style="font-size:10px; color:#666;">
-                                            DB Path: <?php echo $originalPath; ?><br>
-                                            Full Path: <?php echo $imagePath; ?><br>
-                                            File exists: <?php echo file_exists('public/' . $originalPath) ? 'Yes' : 'No'; ?>
-                                        </div>
+                                             style="width:50px; height:50px; object-fit:cover; border-radius:4px;"
+                                             onerror="this.src='../assets/images/placeholder.jpg'">
                                         <?php echo htmlspecialchars($item['product_name']); ?>
                                     </td>
                                     <td><?php echo !empty($item['color']) ? htmlspecialchars($item['color']) : 'N/A'; ?></td>
