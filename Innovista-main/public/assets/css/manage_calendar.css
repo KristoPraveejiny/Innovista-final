@@ -16,7 +16,7 @@
     max-width: 95%;
 }
 .booking-header {
-    background: #1eb6e9;
+    background: #0d9488;
     color: #fff;
     font-size: 1.2rem;
     font-weight: 700;
@@ -68,7 +68,7 @@
     gap: 0;
     margin-bottom: 8px;
     font-weight: 600;
-    color: #1eb6e9;
+    color: #0d9488;
     text-align: center;
 }
 .calendar-days {
@@ -89,9 +89,9 @@
     border-radius: 50%;
     transition: 0.2s;
 }
-.calendar-day.today { border: 1px solid #1eb6e9; }
-.calendar-day.selected { background: #1eb6e9; color: #fff; }
-.calendar-day:hover { background: #e0e7ff; color: #1eb6e9; }
+.calendar-day.today { border: 1px solid #0d9488; }
+.calendar-day.selected { background: #0d9488; color: #fff; }
+.calendar-day:hover { background: #e0e7ff; color: #0d9488; }
 
 .time-panel {
     flex: 0 0 220px;
@@ -110,7 +110,7 @@
 .selected-time-display {
     font-weight: 600;
     margin-bottom: 12px;
-    color: #1eb6e9;
+    color: #0d9488;
 }
 .time-slots {
     display: flex;
@@ -127,18 +127,18 @@
     text-align: center;
     padding: 10px 0;
     cursor: pointer;
-    color: #1eb6e9;
+    color: #0d9488;
     transition: 0.2s;
 }
 .time-slot.selected-db {
-    background: #1eb6e9;
+    background: #0d9488;
     color: #fff;
     font-weight: 700;
     opacity: 0.7;
 }
 .time-slot:hover { background: #e0e7ff; }
 .save-btn {
-    background: #1eb6e9;
+    background: #0d9488;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -147,7 +147,7 @@
     cursor: pointer;
     margin-top: auto;
 }
-.save-btn:hover { background: #159ac2; }
+.save-btn:hover { background: #0d9488; }
 
 .booking-layout {
     display: flex;
@@ -156,7 +156,7 @@
 
 /* Highlight saved (DB) times in time slots */
 .time-slot.selected-db {
-    background: #1eb6e9;
+    background: #0d9488;
     color: #fff;
     font-weight: 700;
     opacity: 0.7;
@@ -175,13 +175,13 @@
 }
 .saved-date {
     font-weight: 700;
-    color: #1eb6e9;
+    color: #0d9488;
     margin-top: 12px;
 }
 .saved-time {
     display: inline-block;
     background: #e0e7ff;
-    color: #1eb6e9;
+    color: #0d9488;
     border-radius: 6px;
     padding: 4px 12px;
     margin: 4px 6px 4px 0;
