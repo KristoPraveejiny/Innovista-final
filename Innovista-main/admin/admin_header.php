@@ -50,8 +50,8 @@ $currentPage = basename($_SERVER['SCRIPT_NAME']);
                 <a href="manage_quotations.php" class="nav-link <?php if($currentPage == 'manage_quotations.php') echo 'active'; ?>">
                     <i class="fas fa-file-invoice"></i><span>Quotations</span>
                 </a>
-                <a href="resolve_disputes.php" class="nav-link <?php if($currentPage == 'resolve_disputes.php') echo 'active'; ?>">
-                    <i class="fas fa-gavel"></i><span>Resolve Disputes</span>
+                <a href="manage_reviews.php" class="nav-link <?php if($currentPage == 'manage_reviews.php') echo 'active'; ?>">
+                    <i class="fas fa-star"></i><span>Customer Reviews</span>
                 </a>
                 <a href="manage_contacts.php" class="nav-link <?php if($currentPage == 'manage_contacts.php') echo 'active'; ?>">
                     <i class="fas fa-envelope-open-text"></i><span>Contact Messages</span>

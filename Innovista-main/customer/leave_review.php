@@ -67,11 +67,11 @@ try {
         exit();
     }
 
-    // Check if the customer has already reviewed this specific provider (for this project context)
-    // You might need a project_id or custom_quotation_id column in the reviews table for more specific checks
-    $stmt_check_review = $db->prepare("SELECT id FROM reviews WHERE customer_id = :customer_id AND provider_id = :provider_id LIMIT 1");
+    // Check if the customer has already reviewed this specific provider for this specific project
+    $stmt_check_review = $db->prepare("SELECT id FROM reviews WHERE customer_id = :customer_id AND provider_id = :provider_id AND quotation_id = :quotation_id LIMIT 1");
     $stmt_check_review->bindParam(':customer_id', $loggedInUserId, PDO::PARAM_INT);
     $stmt_check_review->bindParam(':provider_id', $provider_id, PDO::PARAM_INT);
+    $stmt_check_review->bindParam(':quotation_id', $custom_quotation_id, PDO::PARAM_INT);
     $stmt_check_review->execute();
     if ($stmt_check_review->fetch(PDO::FETCH_ASSOC)) {
         $has_reviewed = true;

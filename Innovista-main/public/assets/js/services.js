@@ -1,5 +1,177 @@
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced card number validation with Luhn algorithm
+    const cardNumberInput = document.getElementById('card-number');
+    const cardNumberError = document.getElementById('card-number-error');
+
+    if (cardNumberInput) {
+        // Luhn algorithm to validate card number
+        function luhnCheck(cardNumber) {
+            let sum = 0;
+            let isEven = false;
+            
+            // Loop through values starting from the right
+            for (let i = cardNumber.length - 1; i >= 0; i--) {
+                let digit = parseInt(cardNumber[i]);
+                
+                if (isEven) {
+                    digit *= 2;
+                    if (digit > 9) {
+                        digit -= 9;
+                    }
+                }
+                
+                sum += digit;
+                isEven = !isEven;
+            }
+            
+            return sum % 10 === 0;
+        }
+
+        // Detect card type based on number
+        function getCardType(cardNumber) {
+            const patterns = {
+                visa: /^4[0-9]{12}(?:[0-9]{3})?$/,
+                mastercard: /^5[1-5][0-9]{14}$/,
+                amex: /^3[47][0-9]{13}$/,
+                discover: /^6(?:011|5[0-9]{2})[0-9]{12}$/
+            };
+            
+            for (let type in patterns) {
+                if (patterns[type].test(cardNumber)) {
+                    return type;
+                }
+            }
+            return 'unknown';
+        }
+
+        // Format card number with spaces and validate
+        cardNumberInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+            
+            // Limit to 16 digits for most cards (we'll handle AMEX separately if needed)
+            if (value.length > 16) {
+                value = value.substring(0, 16);
+            }
+            
+            // Add spaces every 4 digits
+            let formattedValue = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+            e.target.value = formattedValue;
+            
+            // Validate in real-time
+            if (value.length > 0) {
+                validateCardNumber(value);
+            } else {
+                hideCardError();
+            }
+        });
+
+        cardNumberInput.addEventListener('blur', function(e) {
+            const value = e.target.value.replace(/\D/g, '');
+            validateCardNumber(value);
+        });
+
+        function validateCardNumber(value) {
+            if (value.length === 0) {
+                showCardError('Card number is required');
+                return false;
+            } else if (value.length < 13) {
+                showCardError('Card number is too short');
+                return false;
+            } else if (value.length > 16) {
+                showCardError('Card number is too long');
+                return false;
+            } else if (!/^\d+$/.test(value)) {
+                showCardError('Card number must contain only digits');
+                return false;
+            } else if (!luhnCheck(value)) {
+                showCardError('Invalid card number - please check and try again');
+                return false;
+            } else {
+                const cardType = getCardType(value);
+                if (cardType === 'unknown') {
+                    showCardError('Unsupported card type - please use Visa, MasterCard, or American Express');
+                    return false;
+                } else {
+                    hideCardError();
+                    // Optional: Show card type
+                    const cardTypeIndicator = document.getElementById('card-type-indicator');
+                    if (cardTypeIndicator) {
+                        cardTypeIndicator.textContent = cardType.toUpperCase();
+                        cardTypeIndicator.style.display = 'inline';
+                    }
+                    return true;
+                }
+            }
+        }
+
+        function showCardError(message) {
+            cardNumberError.textContent = message;
+            cardNumberError.style.display = 'block';
+            cardNumberInput.style.borderColor = '#dc3545';
+            cardNumberInput.style.backgroundColor = '#fff5f5';
+        }
+
+        function hideCardError() {
+            cardNumberError.style.display = 'none';
+            cardNumberInput.style.borderColor = '#ced4da';
+            cardNumberInput.style.backgroundColor = '#fff';
+        }
+
+        // Validate before form submission
+        const bookingForm = document.querySelector('#consultation-payment-form');
+        if (bookingForm) {
+            bookingForm.addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent default form submission
+                
+                const cardValue = cardNumberInput.value.replace(/\D/g, '');
+                if (!validateCardNumber(cardValue)) {
+                    cardNumberInput.focus();
+                    alert('Please enter a valid card number before proceeding with payment.');
+                    return false;
+                }
+                
+                // Submit form via AJAX
+                const formData = new FormData(bookingForm);
+                const submitButton = bookingForm.querySelector('button[type="submit"]');
+                
+                // Disable submit button and show loading
+                submitButton.disabled = true;
+                submitButton.textContent = 'Processing Payment...';
+                
+                fetch('../handlers/handle_consultation_booking.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        // Close modal
+                        document.getElementById('bookingModal').classList.remove('active');
+                        document.getElementById('bookingModal').style.display = 'none';
+                        
+                        // Redirect to services page
+                        if (data.redirect_url) {
+                            window.location.href = data.redirect_url;
+                        }
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while processing your payment. Please try again.');
+                })
+                .finally(() => {
+                    // Re-enable submit button
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Pay $50 & Confirm Booking';
+                });
+            });
+        }
+    }
+
     // Existing booking modal logic...
     // ...existing code...
 
@@ -171,6 +343,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                         // Highlight selected
                                         document.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected'));
                                         btn.classList.add('selected');
+                                        
+                                        // Store booking data in hidden form fields
+                                        document.getElementById('booking-provider-id').value = providerId;
+                                        document.getElementById('booking-date').value = date;
+                                        document.getElementById('booking-time').value = time;
+                                        
                                         // Show payment form as popup/modal
                                         var paymentStep = document.getElementById('paymentStep');
                                         var calendarStep = document.getElementById('calendarStep');

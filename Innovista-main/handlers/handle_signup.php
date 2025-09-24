@@ -70,8 +70,12 @@ if ($userType === 'provider') {
     $phone = $_POST['providerPhone'] ?? '';
     $address = $_POST['providerAddress'] ?? '';
     $bio = $_POST['provider_bio'] ?? '';
-    $main_services_array = $_POST['providerService'] ?? []; // This is an array
-    $subcategories_array = $_POST['providerSubcategories'] ?? []; // This is an array
+    // Always treat providerService as an array, even if only one is selected (radio)
+    $main_services_array = [];
+    if (isset($_POST['providerService']) && $_POST['providerService'] !== '') {
+        $main_services_array[] = $_POST['providerService'];
+    }
+    $subcategories_array = $_POST['providerSubcategories'] ?? [];
 
     // Handle optional provider CV/Portfolio file upload (for credentials, not main profile image)
     // This file's path won't go into users.portfolio, but could go into a separate table or users.credentials_file_path

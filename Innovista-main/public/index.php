@@ -115,18 +115,19 @@
         error_log("Database error fetching featured professionals: " . $e->getMessage());
     }
 
-    // 2. Fetch Recent Work / Portfolio Items (e.g., latest 6)
-    $recentPortfolioItems = [];
+    // 2. Fetch Recent Work / Portfolio Images from service table
+    $recentServicePortfolios = [];
     try {
-        $stmt_portfolio = $conn->prepare("
-            SELECT id, title, description, image_path
-            FROM portfolio_items
+        $stmt_service = $conn->prepare("
+            SELECT provider_name, main_service, subcategories, portfolio
+            FROM service
+            WHERE portfolio IS NOT NULL AND TRIM(portfolio) != ''
             ORDER BY created_at DESC LIMIT 6
         ");
-        $stmt_portfolio->execute();
-        $recentPortfolioItems = $stmt_portfolio->fetchAll(PDO::FETCH_ASSOC);
+        $stmt_service->execute();
+        $recentServicePortfolios = $stmt_service->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
-        error_log("Database error fetching recent portfolio items: " . $e->getMessage());
+        error_log("Database error fetching service portfolios: " . $e->getMessage());
     }
 
     // 3. Fetch Products (hardcoded for now, as no 'products' table in schema)
@@ -145,10 +146,9 @@
     $testimonials = [];
     try {
         $stmt_testimonials = $conn->prepare("
-            SELECT r.review_text, r.rating, c.name AS customer_name
+            SELECT r.comment, r.rating, c.name AS customer_name
             FROM reviews r
             JOIN users c ON r.customer_id = c.id
-            -- WHERE r.is_featured = 1 -- Add this column to reviews table for featured testimonials
             ORDER BY r.created_at DESC LIMIT 3
         ");
         $stmt_testimonials->execute();
@@ -260,11 +260,11 @@
                 ?>
                 <!-- Product 1 (Hardcoded, but could be dynamic from 'products' table) -->
                 <div class="product-card">
-                    <img src="assets/images/port1.jpg" alt="Premium Interior Paint">
+                    <img src="assets/images/port10.jpg" alt="Premium Interior Paint">
                     <div class="product-info">
                         <h4>Premium Interior Paint</h4>
                         <p class="product-category">Painting Supplies</p>
-                        <div class="product-price">Starts from $45</div>
+                        <div class="product-price">Rs 10000</div>
                         <a href="<?php echo htmlspecialchars($servicesLink); ?>" class="btn btn-secondary">View Product</a>
                     </div>
                 </div>
@@ -274,7 +274,7 @@
                     <div class="product-info">
                         <h4>Modern Velvet Sofa</h4>
                         <p class="product-category">Furniture</p>
-                        <div class="product-price">$899</div>
+                        <div class="product-price">Rs100000</div>
                         <a href="<?php echo htmlspecialchars($servicesLink); ?>" class="btn btn-secondary">View Product</a>
                     </div>
                 </div>
@@ -284,7 +284,7 @@
                     <div class="product-info">
                         <h4>Elegant Pendant Lights</h4>
                         <p class="product-category">Lighting</p>
-                        <div class="product-price">$120</div>
+                        <div class="product-price">Rs100000</div>
                         <a href="<?php echo htmlspecialchars($servicesLink); ?>" class="btn btn-secondary">View Product</a>
                     </div>
                 </div>
@@ -380,14 +380,28 @@
                     <?php if (!empty($testimonials)): ?>
                         <?php foreach ($testimonials as $testimonial): ?>
                             <div class="testimonial-card">
-                                "<?php echo htmlspecialchars($testimonial['review_text']); ?>"
+                                "<?php echo htmlspecialchars($testimonial['comment']); ?>"
                                 <br><span class="author">- <?php echo htmlspecialchars($testimonial['customer_name']); ?></span>
-                                <!-- You could also display rating stars here -->
+                                <?php if (isset($testimonial['rating'])): ?>
+                                    <div class="testimonial-rating">
+                                        <?php for ($i = 1; $i <= 5; $i++): ?>
+                                            <span class="fa fa-star<?php echo ($i <= (int)$testimonial['rating']) ? ' checked' : ''; ?>"></span>
+                                        <?php endfor; ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <p class="text-center text-light">No testimonials available at the moment.</p>
                     <?php endif; ?>
+<style>
+.testimonial-rating .fa-star {
+    color: #ccc;
+}
+.testimonial-rating .fa-star.checked {
+    color: #f1c40f;
+}
+</style>
                 </div>
             </div>
         </div>
@@ -402,18 +416,26 @@
             <p><?php echo htmlspecialchars($settings['homepage_our_work_description']); ?></p>
         </div>
         <div class="portfolio-grid homepage-grid">
-            <?php if (!empty($recentPortfolioItems)): ?>
-                <?php foreach ($recentPortfolioItems as $item): ?>
-                    <div class="portfolio-item">
-                        <img src="<?php echo getImageSrc($item['image_path']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>">
-                        <div class="portfolio-overlay">
-                            <div class="portfolio-content">
-                                <h3><?php echo htmlspecialchars($item['title']); ?></h3>
-                                <p><?php echo htmlspecialchars($item['description']); ?></p>
-                                <a href="portfolio_detail.php?id=<?php echo htmlspecialchars($item['id']); ?>" class="btn btn-link">View Project</a>
+            <?php if (!empty($recentServicePortfolios)): ?>
+                <?php foreach ($recentServicePortfolios as $service): ?>
+                    <?php 
+                        $portfolioImages = array_filter(array_map('trim', explode(',', $service['portfolio'])));
+                        $mainService = $service['main_service'] ?? '';
+                        $providerName = $service['provider_name'] ?? '';
+                        $subcategories = $service['subcategories'] ?? '';
+                        $desc = $mainService;
+                    ?>
+                    <?php foreach ($portfolioImages as $img): ?>
+                        <div class="portfolio-item">
+                            <img src="assets/images/<?php echo htmlspecialchars($img); ?>" alt="<?php echo htmlspecialchars($providerName); ?> Portfolio">
+                            <div class="portfolio-overlay">
+                                <div class="portfolio-content">
+                                    <h3><?php echo htmlspecialchars($providerName); ?></h3>
+                                    <p><?php echo htmlspecialchars($desc); ?></p>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    <?php endforeach; ?>
                 <?php endforeach; ?>
             <?php else: ?>
                 <p class="text-center">No recent work to display.</p>

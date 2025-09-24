@@ -210,7 +210,7 @@
     color: var(--text-light);
     text-align: center;
 }
-.products-hero h1 { color: var(--text-light); }
+.products-hero h1 { color:#f3f3f3; }
 .products-hero p { max-width: 600px; margin: 0.5rem auto 0; opacity: 0.8; }
 
 /* --- Main Content Layout --- */
