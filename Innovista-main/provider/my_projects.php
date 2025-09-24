@@ -67,11 +67,14 @@ try {
             cq.advance,
             u.name as customer_name,
             u.email as customer_email,
-            cq.id as custom_quotation_id
+            cq.id as custom_quotation_id,
+            COALESCE(SUM(py.amount), 0) as total_paid
         FROM projects p
         JOIN custom_quotations cq ON p.quotation_id = cq.id
         JOIN users u ON cq.customer_id = u.id
+        LEFT JOIN payments py ON py.quotation_id = cq.id
         WHERE cq.provider_id = :provider_id AND p.status = 'completed'
+        GROUP BY p.id, p.status, p.start_date, p.end_date, cq.project_description, cq.amount, cq.advance, u.name, u.email, cq.id
         ORDER BY p.end_date DESC
     ");
     $stmt->execute([':provider_id' => $provider_id]);
@@ -88,7 +91,7 @@ try {
 <p>Track your active jobs, manage payments, and view your completed work history.</p>
 
 <div class="dashboard-section">
-    <h3>Awaiting Full Payment</h3>
+    
     <div class="content-card">
         <div class="table-wrapper">
             <table>
@@ -136,7 +139,17 @@ try {
                     <tr>
                         <td><?php echo htmlspecialchars($project['customer_name']); ?></td>
                         <td><?php echo htmlspecialchars($project['project_description']); ?></td>
-                        <td><span class="status-badge status-approved">Completed</span></td>
+                        <td>
+                            <?php 
+                            // Check if project is fully paid
+                            $balance = $project['amount'] - $project['total_paid'];
+                            if ($balance <= 0): 
+                            ?>
+                                <span class="status-badge status-approved">Fully Paid</span>
+                            <?php else: ?>
+                                <span class="status-badge status-pending">Completed</span>
+                            <?php endif; ?>
+                        </td>
                         <td>
                             <div class="action-container">
                                 <a href="updateProgress.php?id=<?php echo $project['project_id']; ?>" class="btn-view">

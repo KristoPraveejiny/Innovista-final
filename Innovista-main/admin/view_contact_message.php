@@ -14,7 +14,7 @@ if (!$contact_id || !is_numeric($contact_id)) {
     exit();
 }
 
-$stmt = $conn->prepare("SELECT id, name, email, subject, message, created_at FROM contacts WHERE id = :id");
+$stmt = $conn->prepare("SELECT id, name, email, subject, message, created_at, is_read FROM contacts WHERE id = :id");
 $stmt->bindParam(':id', $contact_id, PDO::PARAM_INT);
 $stmt->execute();
 $message_data = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -24,14 +24,13 @@ if (!$message_data) {
     exit();
 }
 
-// Optional: Mark message as read if 'is_read' column exists and it's unread
-/*
-if (property_exists($conn, 'is_read') && $message_data['is_read'] == 0) {
+// Mark message as read if it's unread
+if ($message_data['is_read'] == 0) {
     $update_stmt = $conn->prepare("UPDATE contacts SET is_read = 1 WHERE id = :id");
     $update_stmt->bindParam(':id', $contact_id, PDO::PARAM_INT);
     $update_stmt->execute();
+    $message_data['is_read'] = 1; // Update local variable
 }
-*/
 ?>
 
 <h2>Contact Message Details</h2>
