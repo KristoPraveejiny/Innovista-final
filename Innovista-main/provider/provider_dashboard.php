@@ -288,37 +288,6 @@ $timeline_items = array_slice($timeline_items, 0, 8); // Show only recent 8 item
     </div>
 </div>
 
-<!-- Active Projects Table -->
-<div class="dashboard-section">
-    <h3><a href="my_projects.php" style="color:inherit;text-decoration:none;">Active Projects</a></h3>
-    <div class="content-card">
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Customer</th>
-                        <th>Project</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($active_projects)): foreach ($active_projects as $project): ?>
-                    <tr>
-                        <td><strong><?php echo htmlspecialchars($project['customer_name']); ?></strong></td>
-                        <td><?php echo htmlspecialchars($project['project_name']); ?></td>
-                        <td><span class="status-badge status-active"><?php echo htmlspecialchars($project['status']); ?></span></td>
-                        <td><a href="<?php echo $project['link']; ?>" class="btn-view">View Details</a></td>
-                    </tr>
-                    <?php endforeach; else: ?>
-                    <tr><td colspan="4" style="text-align:center; padding: 2rem; color: var(--text-light);">No active projects at the moment.</td></tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
 <!-- Project Timeline & Updates -->
 <div class="dashboard-section">
     <h3>Customer Reviews</h3>

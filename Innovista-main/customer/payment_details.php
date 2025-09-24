@@ -261,53 +261,236 @@ require_once '../includes/user_dashboard_header.php';
 .payment-btn i {
     margin-right: 0.5rem;
 }
+
+/* Card validation visual feedback */
+.payment-form input.valid {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.payment-form input.invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Card type icons */
+.payment-form input.card-visa {
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAzMiAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjIwIiByeD0iNCIgZmlsbD0iIzAwNTFBNSIvPgo8L3N2Zz4=');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 32px 20px;
+    padding-right: 50px;
+}
+
+.payment-form input.card-mastercard {
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAzMiAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMCIgcj0iOCIgZmlsbD0iI0VCMDAxQiIvPgo8Y2lyY2xlIGN4PSIyMCIgY3k9IjEwIiByPSI4IiBmaWxsPSIjRkY1RjAwIi8+Cjwvc3ZnPg==');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 32px 20px;
+    padding-right: 50px;
+}
+
+.payment-form input.card-amex {
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAzMiAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjIwIiByeD0iNCIgZmlsbD0iIzJFQjNGNCIvPgo8L3N2Zz4=');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 32px 20px;
+    padding-right: 50px;
+}
+
+/* Loading state */
+.payment-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.payment-btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
 </style>
 
 <script>
-// Format card number input
+// Luhn Algorithm for card validation
+function validateCardNumber(cardNumber) {
+    // Remove spaces and check if only digits
+    cardNumber = cardNumber.replace(/\s/g, '');
+    if (!/^\d+$/.test(cardNumber)) return false;
+    
+    // Must be between 13-19 digits
+    if (cardNumber.length < 13 || cardNumber.length > 19) return false;
+    
+    // Apply Luhn algorithm
+    let sum = 0;
+    let isEven = false;
+    
+    for (let i = cardNumber.length - 1; i >= 0; i--) {
+        let digit = parseInt(cardNumber.charAt(i));
+        
+        if (isEven) {
+            digit *= 2;
+            if (digit > 9) {
+                digit = digit % 10 + 1;
+            }
+        }
+        
+        sum += digit;
+        isEven = !isEven;
+    }
+    
+    return (sum % 10) === 0;
+}
+
+// Detect card type
+function getCardType(cardNumber) {
+    cardNumber = cardNumber.replace(/\s/g, '');
+    
+    const cardTypes = {
+        visa: /^4[0-9]{12}(?:[0-9]{3})?$/,
+        mastercard: /^5[1-5][0-9]{14}$/,
+        amex: /^3[47][0-9]{13}$/,
+        discover: /^6(?:011|5[0-9]{2})[0-9]{12}$/,
+        dinersclub: /^3[0689][0-9]{11}$/,
+        jcb: /^(?:2131|1800|35\d{3})\d{11}$/
+    };
+    
+    for (let type in cardTypes) {
+        if (cardTypes[type].test(cardNumber)) {
+            return type;
+        }
+    }
+    return 'unknown';
+}
+
+// Update card type display
+function updateCardType(cardNumber) {
+    const cardType = getCardType(cardNumber);
+    const cardInput = document.getElementById('card_number');
+    
+    // Remove existing card type classes
+    cardInput.className = cardInput.className.replace(/card-\w+/g, '');
+    
+    if (cardType !== 'unknown') {
+        cardInput.classList.add('card-' + cardType);
+    }
+    
+    return cardType;
+}
+
+// Real-time card validation with visual feedback
 document.getElementById('card_number').addEventListener('input', function(e) {
     let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+    
+    // Format with spaces every 4 digits
     let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
     e.target.value = formattedValue;
+    
+    // Update card type and validation
+    const cardType = updateCardType(value);
+    const isValid = validateCardNumber(value);
+    
+    // Visual feedback
+    e.target.classList.remove('valid', 'invalid');
+    if (value.length > 0) {
+        if (isValid) {
+            e.target.classList.add('valid');
+        } else if (value.length >= 13) {
+            e.target.classList.add('invalid');
+        }
+    }
 });
 
-// Format expiry date input
+// Validate expiry date
+function validateExpiryDate(expiry) {
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) return false;
+    
+    const [month, year] = expiry.split('/').map(Number);
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear() % 100;
+    const currentMonth = currentDate.getMonth() + 1;
+    
+    if (month < 1 || month > 12) return false;
+    if (year < currentYear) return false;
+    if (year === currentYear && month < currentMonth) return false;
+    
+    return true;
+}
+
+// Format expiry date input with validation
 document.getElementById('expiry_date').addEventListener('input', function(e) {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length >= 2) {
         value = value.substring(0, 2) + '/' + value.substring(2, 4);
     }
     e.target.value = value;
+    
+    // Visual validation feedback
+    e.target.classList.remove('valid', 'invalid');
+    if (value.length === 5) {
+        if (validateExpiryDate(value)) {
+            e.target.classList.add('valid');
+        } else {
+            e.target.classList.add('invalid');
+        }
+    }
 });
 
 // Format CVV input
 document.getElementById('cvv').addEventListener('input', function(e) {
     e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    
+    // Visual validation
+    const cvv = e.target.value;
+    e.target.classList.remove('valid', 'invalid');
+    if (cvv.length >= 3) {
+        if (cvv.length === 3 || cvv.length === 4) {
+            e.target.classList.add('valid');
+        } else {
+            e.target.classList.add('invalid');
+        }
+    }
 });
 
-// Form validation
+// Enhanced form validation
 document.getElementById('paymentForm').addEventListener('submit', function(e) {
     const cardNumber = document.getElementById('card_number').value.replace(/\s/g, '');
     const expiryDate = document.getElementById('expiry_date').value;
     const cvv = document.getElementById('cvv').value;
+    const cardholderName = document.getElementById('cardholder_name').value.trim();
     
-    if (cardNumber.length < 16) {
-        e.preventDefault();
-        alert('Please enter a valid 16-digit card number.');
-        return;
+    let errors = [];
+    
+    // Validate cardholder name
+    if (!cardholderName || cardholderName.length < 2) {
+        errors.push('Please enter a valid cardholder name.');
     }
     
-    if (expiryDate.length < 5) {
-        e.preventDefault();
-        alert('Please enter a valid expiry date (MM/YY).');
-        return;
+    // Validate card number
+    if (!validateCardNumber(cardNumber)) {
+        errors.push('Please enter a valid card number.');
     }
     
-    if (cvv.length < 3) {
-        e.preventDefault();
-        alert('Please enter a valid 3-digit CVV.');
-        return;
+    // Validate expiry date
+    if (!validateExpiryDate(expiryDate)) {
+        errors.push('Please enter a valid expiry date (MM/YY).');
     }
+    
+    // Validate CVV
+    if (cvv.length < 3 || cvv.length > 4) {
+        errors.push('Please enter a valid CVV (3-4 digits).');
+    }
+    
+    // Show errors if any
+    if (errors.length > 0) {
+        e.preventDefault();
+        alert('Please correct the following errors:\n\n' + errors.join('\n'));
+        return false;
+    }
+    
+    // Show loading state
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Payment...';
+    submitButton.disabled = true;
 });
 </script>
 
