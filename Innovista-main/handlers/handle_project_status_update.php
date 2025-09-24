@@ -67,7 +67,21 @@ try {
 
     // Check if status is actually changing
     if ($project_info['current_status'] === $new_status) {
-        set_flash_message('info', 'Project status is already set to ' . ucfirst(str_replace('_', ' ', $new_status)) . '.');
+        // If a status message is provided, save it as a project update even if status is unchanged
+        if (!empty($status_message)) {
+            $stmt_insert_update = $conn->prepare("
+                INSERT INTO project_updates (project_id, user_id, update_text, created_at) 
+                VALUES (:project_id, :user_id, :update_text, NOW())
+            ");
+            $stmt_insert_update->bindParam(':project_id', $project_id, PDO::PARAM_INT);
+            $stmt_insert_update->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+            $stmt_insert_update->bindParam(':update_text', $status_message);
+            $stmt_insert_update->execute();
+                $conn->commit();
+            set_flash_message('success', 'Status message added successfully!');
+        } else {
+            set_flash_message('info', 'Project status is already set to ' . ucfirst(str_replace('_', ' ', $new_status)) . '.');
+        }
         header('Location: ../provider/updateProgress.php?id=' . $project_id);
         exit();
     }

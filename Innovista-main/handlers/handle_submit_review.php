@@ -64,27 +64,28 @@ try {
     }
 
     // 2. Check if a review already exists for this customer-provider-project combination
-    //    (Assuming reviews table doesn't have custom_quotation_id, so a simple check)
-    $stmt_check_review = $conn->prepare("SELECT id FROM reviews WHERE customer_id = :customer_id AND provider_id = :provider_id LIMIT 1");
+    $stmt_check_review = $conn->prepare("SELECT id FROM reviews WHERE customer_id = :customer_id AND provider_id = :provider_id AND quotation_id = :quotation_id LIMIT 1");
     $stmt_check_review->bindParam(':customer_id', $customer_id, PDO::PARAM_INT);
     $stmt_check_review->bindParam(':provider_id', $provider_id, PDO::PARAM_INT);
+    $stmt_check_review->bindParam(':quotation_id', $custom_quotation_id, PDO::PARAM_INT);
     $stmt_check_review->execute();
     if ($stmt_check_review->fetch(PDO::FETCH_ASSOC)) {
         $conn->rollBack();
-        set_flash_message('info', 'You have already submitted a review for this provider.');
+        set_flash_message('info', 'You have already submitted a review for this provider on this project.');
         header('Location: ../customer/view_project_history.php?id=' . htmlspecialchars($custom_quotation_id));
         exit();
     }
 
-    // 3. Insert the new review
+    // 3. Insert the new review (match table: quotation_id, comment)
     $stmt_insert_review = $conn->prepare("
-        INSERT INTO reviews (customer_id, provider_id, rating, review_text, created_at)
-        VALUES (:customer_id, :provider_id, :rating, :review_text, NOW())
+        INSERT INTO reviews (quotation_id, customer_id, provider_id, rating, comment, created_at)
+        VALUES (:quotation_id, :customer_id, :provider_id, :rating, :comment, NOW())
     ");
+    $stmt_insert_review->bindParam(':quotation_id', $custom_quotation_id, PDO::PARAM_INT);
     $stmt_insert_review->bindParam(':customer_id', $customer_id, PDO::PARAM_INT);
     $stmt_insert_review->bindParam(':provider_id', $provider_id, PDO::PARAM_INT);
     $stmt_insert_review->bindParam(':rating', $rating, PDO::PARAM_INT);
-    $stmt_insert_review->bindParam(':review_text', $review_text);
+    $stmt_insert_review->bindParam(':comment', $review_text);
     $stmt_insert_review->execute();
 
     $conn->commit();

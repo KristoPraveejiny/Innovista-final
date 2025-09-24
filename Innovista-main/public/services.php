@@ -228,27 +228,35 @@ $isLoggedInFlag = isUserLoggedIn() ? 'true' : 'false';
         <div id="paymentStep" style="display:none;">
             <h3>Confirm & Pay Consultation Fee</h3>
             <p>A $50 fee is required to confirm your booking. This will be credited towards your project.</p>
-            <form action="#" class="payment-form">
+            <form action="../handlers/handle_consultation_booking.php" method="POST" class="payment-form" id="consultation-payment-form">
+                <!-- Hidden fields for booking data -->
+                <input type="hidden" id="booking-provider-id" name="provider_id" value="">
+                <input type="hidden" id="booking-service-id" name="service_id" value="1">
+                <input type="hidden" id="booking-date" name="booking_date" value="">
+                <input type="hidden" id="booking-time" name="booking_time" value="">
+                <input type="hidden" name="payment_method" value="card">
+                
                 <div class="form-group">
                     <label for="cardholder-name">Cardholder Name</label>
-                    <input type="text" id="cardholder-name" placeholder="John M. Doe" required>
+                    <input type="text" id="cardholder-name" name="cardholder_name" placeholder="John M. Doe" required>
                 </div>
                 <div class="form-group">
-                    <label for="card-number">Card Number</label>
-                    <input type="text" id="card-number" placeholder="•••• •••• •••• ••••" required>
+                    <label for="card-number">Card Number <span id="card-type-indicator" style="display: none; color: #28a745; font-weight: bold; margin-left: 10px;"></span></label>
+                    <input type="text" id="card-number" name="card_number" placeholder="•••• •••• •••• ••••" maxlength="19" pattern="[0-9\s]{13,19}" title="Enter a valid card number" required>
+                    <div id="card-number-error" class="error-message" style="color: #dc3545; font-size: 12px; display: none; margin-top: 5px; font-weight: 500;"></div>
                 </div>
                 <div class="card-details">
                     <div class="form-group">
                         <label for="expiry-date">Expiry</label>
-                        <input type="text" id="expiry-date" placeholder="MM / YY" required>
+                        <input type="text" id="expiry-date" name="card_expiry" placeholder="MM / YY" required>
                     </div>
                     <div class="form-group">
                         <label for="cvc">CVC</label>
-                        <input type="text" id="cvc" placeholder="CVC" required>
+                        <input type="text" id="cvc" name="card_cvc" placeholder="CVC" required>
                     </div>
                      <div class="form-group">
                         <label for="zip">ZIP</label>
-                        <input type="text" id="zip" placeholder="ZIP Code" required>
+                        <input type="text" id="zip" name="zip_code" placeholder="ZIP Code" required>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-confirm-booking">Pay $50 & Confirm Booking</button>

@@ -41,40 +41,60 @@ $stmt->execute();
 $row = $stmt->fetch(PDO::FETCH_ASSOC);
 $new_messages = $row['total'];
 
-// 5. Open Disputes count
-$open_disputes_count = 0;
-$stmt = $conn->prepare("SELECT COUNT(*) as total FROM disputes WHERE status != 'resolved'");
+// 5. Total Reviews count
+$total_reviews_count = 0;
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM reviews");
 $stmt->execute();
 $row = $stmt->fetch(PDO::FETCH_ASSOC);
-$open_disputes_count = $row['total'];
+$total_reviews_count = $row['total'];
 
 // 6. Total Products count
 $total_products = 0;
-$stmt = $conn->prepare("SELECT COUNT(*) as total FROM products WHERE status = 'active'");
-$stmt->execute();
-$row = $stmt->fetch(PDO::FETCH_ASSOC);
-$total_products = $row['total'];
+try {
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM products WHERE status = 'active'");
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $total_products = $row['total'];
+} catch (PDOException $e) {
+    // Products table doesn't exist, set to 0
+    $total_products = 0;
+}
 
 // 7. Low Stock Products count (less than 10 items)
 $low_stock_products = 0;
-$stmt = $conn->prepare("SELECT COUNT(*) as total FROM products WHERE stock_quantity < 10 AND status = 'active'");
-$stmt->execute();
-$row = $stmt->fetch(PDO::FETCH_ASSOC);
-$low_stock_products = $row['total'];
+try {
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM products WHERE stock_quantity < 10 AND status = 'active'");
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $low_stock_products = $row['total'];
+} catch (PDOException $e) {
+    // Products table doesn't exist, set to 0
+    $low_stock_products = 0;
+}
 
 // 6. Total Services
 $total_services = 0;
-$stmt = $conn->prepare("SELECT COUNT(*) as total FROM service");
-$stmt->execute();
-$row = $stmt->fetch(PDO::FETCH_ASSOC);
-$total_services = $row['total'];
+try {
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM service");
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $total_services = $row['total'];
+} catch (PDOException $e) {
+    // Service table doesn't exist, set to 0
+    $total_services = 0;
+}
 
-// 7. Total Portfolio Items
+// 7. Total Services with Portfolio
 $total_portfolio_items = 0;
-$stmt = $conn->prepare("SELECT COUNT(*) as total FROM portfolio_items");
-$stmt->execute();
-$row = $stmt->fetch(PDO::FETCH_ASSOC);
-$total_portfolio_items = $row['total'];
+try {
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM service WHERE portfolio IS NOT NULL AND portfolio != ''");
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $total_portfolio_items = $row['total'];
+} catch (PDOException $e) {
+    // Service table doesn't exist, set to 0
+    $total_portfolio_items = 0;
+}
 
 
 // 8. Recent Registrations (latest 5 users, excluding admins)
@@ -90,7 +110,7 @@ $stmt = $conn->prepare("SELECT id, name, role,
 $stmt->execute();
 $recent_users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 9. Recent Activity Feed (Example: last 10 activities - new quotes, payments, disputes, reviews, provider registrations)
+// 9. Recent Activity Feed (Example: last 10 activities - new quotes, payments, reviews, provider registrations)
 $recent_activities = [];
 try {
     $stmt_activities = $conn->prepare("
@@ -99,9 +119,6 @@ try {
         UNION ALL
         (SELECT 'payment' as type, p.id as entity_id, p.payment_date as created_at, u.name as user_name, 'customer' as role, CONCAT(p.payment_type, ' payment of Rs ', p.amount) as description
          FROM payments p JOIN custom_quotations cq ON p.quotation_id = cq.id JOIN users u ON cq.customer_id = u.id ORDER BY p.payment_date DESC LIMIT 5)
-        UNION ALL
-        (SELECT 'dispute' as type, d.id as entity_id, d.created_at, u.name as user_name, 'customer' as role, CONCAT('Dispute: ', d.reason) as description
-         FROM disputes d JOIN users u ON d.reported_by_id = u.id ORDER BY d.created_at DESC LIMIT 5)
         UNION ALL
         (SELECT 'new_review' as type, r.id as entity_id, r.created_at, u.name as user_name, 'customer' as role, CONCAT('New review for provider ', p.name, ' (Rating: ', r.rating, ')') as description
          FROM reviews r JOIN users u ON r.customer_id = u.id JOIN users p ON r.provider_id = p.id ORDER BY r.created_at DESC LIMIT 5)
@@ -129,7 +146,7 @@ try {
         </div>
         <div class="stat-info">
             <h4>Total Revenue</h4>
-            <p>Rs <?php echo number_format($total_revenue, 2); ?></p>
+            <p class="revenue-amount">Rs <?php echo number_format($total_revenue, 2); ?></p>
         </div>
     </div>
     <div class="stat-card">
@@ -160,12 +177,12 @@ try {
         </div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon" style="background: linear-gradient(45deg, #e74c3c, #ec7063);">
-            <i class="fas fa-gavel"></i>
+        <div class="stat-icon" style="background: linear-gradient(45deg, #f39c12, #f7dc6f);">
+            <i class="fas fa-star"></i>
         </div>
         <div class="stat-info">
-            <h4>Open Disputes</h4>
-            <p><?php echo $open_disputes_count; ?></p>
+            <h4>Total Reviews</h4>
+            <p><?php echo $total_reviews_count; ?></p>
         </div>
     </div>
     <div class="stat-card">
@@ -200,7 +217,7 @@ try {
             <i class="fas fa-images"></i>
         </div>
         <div class="stat-info">
-            <h4>Portfolio Items</h4>
+            <h4>Services with Portfolio</h4>
             <p><?php echo $total_portfolio_items; ?></p>
         </div>
     </div>
@@ -222,13 +239,13 @@ try {
             <i class="fas fa-file-invoice"></i>
             <span>Quotations</span>
         </a>
-        <a href="resolve_disputes.php" class="access-card">
-            <i class="fas fa-gavel"></i>
-            <span>Resolve Disputes</span>
-        </a>
         <a href="manage_contacts.php" class="access-card">
             <i class="fas fa-envelope-open-text"></i>
             <span>Contact Messages</span>
+        </a>
+        <a href="manage_reviews.php" class="access-card">
+            <i class="fas fa-star"></i>
+            <span>Customer Reviews</span>
         </a>
         <a href="manage_portfolio_items.php" class="access-card">
             <i class="fas fa-images"></i>
@@ -367,5 +384,59 @@ try {
     </div>
 </div>
 
+
+<style>
+/* Custom styling for revenue box to handle large numbers */
+.revenue-amount {
+    font-size: 1.8rem !important; /* Smaller font for large numbers */
+    font-weight: 700 !important;
+    color: var(--text-dark) !important;
+    line-height: 1.1 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+/* Responsive font sizing for revenue */
+@media (max-width: 1200px) {
+    .revenue-amount {
+        font-size: 1.6rem !important;
+    }
+}
+
+@media (max-width: 992px) {
+    .revenue-amount {
+        font-size: 1.4rem !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .revenue-amount {
+        font-size: 1.2rem !important;
+    }
+}
+
+/* Make the revenue stat card slightly wider to accommodate the number */
+.stat-card:first-child {
+    min-width: 280px;
+}
+
+/* Ensure proper spacing for all stat cards */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .stats-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-card:first-child {
+        min-width: auto;
+    }
+}
+</style>
 
 <?php require_once 'admin_footer.php'; ?>

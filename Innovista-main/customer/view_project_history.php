@@ -62,15 +62,15 @@ try {
         exit();
     }
 
-    // Check if customer has already left a review for this provider/project
+    // Check if customer has already left a review for this specific provider/project
     $stmt_check_review = $db->prepare("
         SELECT id FROM reviews 
-        WHERE customer_id = :customer_id AND provider_id = :provider_id 
-        -- Optionally, link to project_id or quotation_id if reviews table had it
+        WHERE customer_id = :customer_id AND provider_id = :provider_id AND quotation_id = :quotation_id
         LIMIT 1
     ");
     $stmt_check_review->bindParam(':customer_id', $loggedInUserId, PDO::PARAM_INT);
     $stmt_check_review->bindParam(':provider_id', $project_data['provider_id'], PDO::PARAM_INT);
+    $stmt_check_review->bindParam(':quotation_id', $custom_quotation_id, PDO::PARAM_INT);
     $stmt_check_review->execute();
     if ($stmt_check_review->fetch(PDO::FETCH_ASSOC)) {
         $review_status = 'left';

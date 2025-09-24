@@ -25,34 +25,59 @@ require_once '../config/Database.php';
 $db = (new Database())->getConnection();
 $loggedInUserId = getUserId();
 
+
+// Accept either custom_quotation_id (from URL) or project_id (for fallback)
 $custom_quotation_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-if (!$custom_quotation_id) {
-    set_flash_message('error', 'Invalid Project ID provided.');
-    header('Location: my_projects.php');
-    exit();
-}
-
+$project_id = null;
 $project_data = null;
-$project_updates = []; // To store communication and progress updates
+$project_updates = [];
 
-// Fetch project details, joining with custom_quotations and users
 try {
-    $stmt_project = $db->prepare("
-        SELECT 
-            p.id AS project_id, p.status AS project_status, p.start_date, p.end_date,
-            cq.id AS custom_quotation_id, cq.project_description, cq.amount AS quoted_amount, cq.advance,
-            prov.id AS provider_id, prov.name AS provider_name, prov.email AS provider_email,
-            cust.id AS customer_id, cust.name AS customer_name
-        FROM projects p
-        JOIN custom_quotations cq ON p.quotation_id = cq.id
-        JOIN users prov ON cq.provider_id = prov.id
-        JOIN users cust ON cq.customer_id = cust.id
-        WHERE p.quotation_id = :custom_quotation_id AND cq.customer_id = :customer_id
-    ");
-    $stmt_project->bindParam(':custom_quotation_id', $custom_quotation_id, PDO::PARAM_INT);
-    $stmt_project->bindParam(':customer_id', $loggedInUserId, PDO::PARAM_INT);
-    $stmt_project->execute();
-    $project_data = $stmt_project->fetch(PDO::FETCH_ASSOC);
+    if ($custom_quotation_id) {
+        // Try to find project by custom_quotation_id (normal case)
+        $stmt_project = $db->prepare("
+            SELECT 
+                p.id AS project_id, p.status AS project_status, p.start_date, p.end_date,
+                cq.id AS custom_quotation_id, cq.project_description, cq.amount AS quoted_amount, cq.advance,
+                prov.id AS provider_id, prov.name AS provider_name, prov.email AS provider_email,
+                cust.id AS customer_id, cust.name AS customer_name
+            FROM projects p
+            JOIN custom_quotations cq ON p.quotation_id = cq.id
+            JOIN users prov ON cq.provider_id = prov.id
+            JOIN users cust ON cq.customer_id = cust.id
+            WHERE p.quotation_id = :custom_quotation_id AND cq.customer_id = :customer_id
+        ");
+        $stmt_project->bindParam(':custom_quotation_id', $custom_quotation_id, PDO::PARAM_INT);
+        $stmt_project->bindParam(':customer_id', $loggedInUserId, PDO::PARAM_INT);
+        $stmt_project->execute();
+        $project_data = $stmt_project->fetch(PDO::FETCH_ASSOC);
+        if ($project_data) {
+            $project_id = $project_data['project_id'];
+        }
+    }
+
+    // Fallback: if not found, try to get by project_id directly (if provided in URL as id)
+    if (!$project_data && isset($_GET['project_id'])) {
+        $project_id = filter_input(INPUT_GET, 'project_id', FILTER_VALIDATE_INT);
+        if ($project_id) {
+            $stmt_project2 = $db->prepare("
+                SELECT 
+                    p.id AS project_id, p.status AS project_status, p.start_date, p.end_date,
+                    cq.id AS custom_quotation_id, cq.project_description, cq.amount AS quoted_amount, cq.advance,
+                    prov.id AS provider_id, prov.name AS provider_name, prov.email AS provider_email,
+                    cust.id AS customer_id, cust.name AS customer_name
+                FROM projects p
+                JOIN custom_quotations cq ON p.quotation_id = cq.id
+                JOIN users prov ON cq.provider_id = prov.id
+                JOIN users cust ON cq.customer_id = cust.id
+                WHERE p.id = :project_id AND cq.customer_id = :customer_id
+            ");
+            $stmt_project2->bindParam(':project_id', $project_id, PDO::PARAM_INT);
+            $stmt_project2->bindParam(':customer_id', $loggedInUserId, PDO::PARAM_INT);
+            $stmt_project2->execute();
+            $project_data = $stmt_project2->fetch(PDO::FETCH_ASSOC);
+        }
+    }
 
     if (!$project_data) {
         set_flash_message('error', 'Project not found or you do not have permission to view it.');
@@ -61,7 +86,6 @@ try {
     }
 
     // Fetch project updates (communication)
-    // Order by created_at ascending for a timeline view
     $stmt_updates = $db->prepare("
         SELECT pu.id, pu.update_text, pu.image_path, pu.created_at, 
                u.name AS poster_name, u.role AS poster_role

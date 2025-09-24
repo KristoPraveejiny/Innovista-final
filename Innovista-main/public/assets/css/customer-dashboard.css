@@ -286,7 +286,7 @@
 
 .stat-info-customer h4 {
     font-size: 0.9rem; /* Slightly smaller for better balance */
-    color: var(--text-light);
+    color: #181717;
     font-weight: 600; /* Slightly bolder */
     margin-bottom: 0.3rem; /* Increased spacing */
     text-transform: uppercase;

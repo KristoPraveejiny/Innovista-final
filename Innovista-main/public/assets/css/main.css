@@ -18,7 +18,7 @@
     /* Text Colors */
     --text-dark: #333333;
     --text-light: #ffffff;
-    --text-muted: #666666;
+    --text-muted: #0a0a0a;
 
     /* Fonts */
     --header-font: 'Montserrat', sans-serif;
@@ -493,7 +493,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .portfolio-content h3 {
-    color: var(--text-light);
+    color:#e2e8f0;
     font-size: 1.3rem;
     margin-bottom: 0.25rem;
 }

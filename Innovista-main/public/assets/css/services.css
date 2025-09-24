@@ -326,7 +326,7 @@
 .services-hero .hero-slide { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: opacity 1.5s ease-in-out; }
 .services-hero .hero-slide.active { opacity: 1; }
 .services-hero .hero-content { max-width: 800px; }
-.services-hero h1 { font-size: 3rem; color: var(--text-light); margin-bottom: 1rem; }
+.services-hero h1 { font-size: 3rem; color: #f3f3f3; margin-bottom: 1rem; }
 .services-hero p { font-size: 1.1rem; opacity: 0.9; margin-bottom: 2rem; }
 .hero-stats {
     display: flex;
@@ -447,8 +447,8 @@
 .commitment-item p { color: var(--text-muted); }
 
 /* --- Products CTA Section --- */
-.products-cta-section { padding: 4rem 0; text-align: center; background:rgb(101, 99, 96); color: var(--text-light); }
-.products-cta-section h2 { color: var(--light-color); }
+.products-cta-section { padding: 4rem 0; text-align: center; background:rgb(101, 99, 96); color: #f3f3f3; }
+.products-cta-section h2 { color:#f3f3f3; }
 .products-cta-section p { max-width: 600px; margin: 0 auto 1.5rem; opacity: 0.8; }
 
 /* --- Responsive Overrides --- */

@@ -97,7 +97,7 @@
    ========================================= */
 .btn-earthy {
     background-color: var(--primary-color);
-    color: var(--text-light);
+    color: #f3f3f3;
     border: none;
     padding: 10px 20px;
     border-radius: 8px;
