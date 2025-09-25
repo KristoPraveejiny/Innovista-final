@@ -419,11 +419,11 @@
     margin-top: 2rem;
     padding: 2rem;
     background: var(--dark-color);
-    color: var(--text-light);
+    color: #ffffff;
     border-radius: var(--border-radius);
     text-align: center;
 }
-.package-section h4 { font-size: 1.5rem; color: var(--text-light); }
+.package-section h4 { font-size: 1.5rem; color: #ffffff; }
 .package-section p { opacity: 0.8; margin: 0.5rem 0 1.5rem; }
 .btn-get-package { width: auto; }
 

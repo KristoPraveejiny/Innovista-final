@@ -27,17 +27,32 @@ if (!$provider_data) {
     exit();
 }
 
-// Fetch provider's service details
-$stmt_services = $conn->prepare("SELECT main_service, subcategories FROM service WHERE provider_id = :id");
+// Fetch provider's service details and portfolio
+$stmt_services = $conn->prepare("SELECT main_service, subcategories, portfolio FROM service WHERE provider_id = :id");
 $stmt_services->bindParam(':id', $provider_id, PDO::PARAM_INT);
 $stmt_services->execute();
 $services_data = $stmt_services->fetchAll(PDO::FETCH_ASSOC);
 
-// Fetch provider's portfolio items
-$stmt_portfolio = $conn->prepare("SELECT title, description, image_path FROM portfolio_items WHERE provider_id = :id ORDER BY created_at DESC");
-$stmt_portfolio->bindParam(':id', $provider_id, PDO::PARAM_INT);
-$stmt_portfolio->execute();
-$portfolio_items = $stmt_portfolio->fetchAll(PDO::FETCH_ASSOC);
+// Process portfolio data (stored as comma-separated image paths in service table)
+$portfolio_items = [];
+if (!empty($services_data) && !empty($services_data[0]['portfolio'])) {
+    $portfolio_paths = explode(',', $services_data[0]['portfolio']);
+    foreach ($portfolio_paths as $path) {
+        $clean_path = trim($path);
+        if (!empty($clean_path)) {
+            $portfolio_items[] = ['image_path' => $clean_path];
+        }
+    }
+}
+
+// Debug information (remove after fixing)
+// echo "<!--";
+// echo "Portfolio raw data: " . ($services_data[0]['portfolio'] ?? 'NULL');
+// echo "Portfolio items count: " . count($portfolio_items);
+// foreach ($portfolio_items as $item) {
+//     echo "Image path: " . $item['image_path'] . "\n";
+// }
+// echo "-->";
 
 ?>
 
@@ -79,12 +94,19 @@ $portfolio_items = $stmt_portfolio->fetchAll(PDO::FETCH_ASSOC);
 <div class="content-card mt-4">
     <h3>Portfolio</h3>
     <?php if (!empty($portfolio_items)): ?>
-        <div class="portfolio-grid">
-            <?php foreach ($portfolio_items as $item): ?>
-                <div class="portfolio-item">
-                    <img src="../public/<?php echo htmlspecialchars($item['image_path']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>">
-                    <h4><?php echo htmlspecialchars($item['title']); ?></h4>
-                    <p><?php echo htmlspecialchars(substr($item['description'], 0, 100)) . (strlen($item['description']) > 100 ? '...' : ''); ?></p>
+        <div class="portfolio-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+            <?php foreach ($portfolio_items as $index => $item): ?>
+                <div class="portfolio-item" style="text-align: center;">
+                    <img src="../public/assets/images/<?php echo htmlspecialchars($item['image_path']); ?>" 
+                         alt="Portfolio Item <?php echo $index + 1; ?>" 
+                         style="width: 200px; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div style="display: none; width: 200px; height: 150px; background: #f0f0f0; border-radius: 8px; border: 1px solid #ddd; line-height: 150px; color: #666;">
+                        Image not found
+                    </div>
+                    <p style="margin-top: 8px; font-size: 12px; color: #666;">
+                        <?php echo htmlspecialchars($item['image_path']); ?>
+                    </p>
                 </div>
             <?php endforeach; ?>
         </div>
